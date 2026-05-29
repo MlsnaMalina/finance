@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react'
-import type { RecurringPayment, Debt } from '../types'
+import type { RecurringPayment, Debt, Expense } from '../types'
 import { CalendarView } from './CalendarView'
 import { PaymentModal } from './PaymentModal'
+import { TrackerView } from './TrackerView'
 import { formatCurrency, MONTH_NAMES } from '../utils/formatters'
 
 interface PaymentTabProps {
@@ -12,12 +13,16 @@ interface PaymentTabProps {
   onBalanceChange: (v: number | null) => void
   onReserveChange: (v: number | null) => void
   debts?: Debt[]
+  expenses: Expense[]
+  onExpensesChange: (e: Expense[]) => void
+  income: number | null
+  onIncomeChange: (v: number | null) => void
 }
 
-export function PaymentTab({ payments, onPaymentsChange, balance, reserve, onBalanceChange, onReserveChange, debts = [] }: PaymentTabProps) {
+export function PaymentTab({ payments, onPaymentsChange, balance, reserve, onBalanceChange, onReserveChange, debts = [], expenses, onExpensesChange, income, onIncomeChange }: PaymentTabProps) {
   const [showAdd, setShowAdd] = useState(false)
   const [editPayment, setEditPayment] = useState<RecurringPayment | null>(null)
-  const [view, setView] = useState<'calendar' | 'list'>('calendar')
+  const [view, setView] = useState<'calendar' | 'list' | 'tracker'>('calendar')
 
   function handleSave(p: RecurringPayment) {
     const exists = payments.find(x => x.id === p.id)
@@ -52,7 +57,7 @@ export function PaymentTab({ payments, onPaymentsChange, balance, reserve, onBal
           gap: 2,
           flexShrink: 0,
         }}>
-          {(['calendar', 'list'] as const).map(v => (
+          {([['calendar', 'Kalendář'], ['list', 'Seznam'], ['tracker', 'Výdajový tracker']] as const).map(([v, label]) => (
             <button
               key={v}
               onClick={() => setView(v)}
@@ -68,29 +73,33 @@ export function PaymentTab({ payments, onPaymentsChange, balance, reserve, onBal
                 transition: 'all 0.15s',
               }}
             >
-              {v === 'calendar' ? 'Kalendář' : 'Seznam'}
+              {label}
             </button>
           ))}
         </div>
 
-        <BalanceWidget payments={payments} balance={balance} reserve={reserve} onBalanceChange={onBalanceChange} onReserveChange={onReserveChange} />
-
-        <button onClick={() => setShowAdd(true)} className="btn-primary" style={{ padding: '8px 16px', fontSize: 13, flexShrink: 0 }}>
-          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <path d="M8 3v10M3 8h10" />
-          </svg>
-          Přidat platbu
-        </button>
+        {view !== 'tracker' && (
+          <>
+            <BalanceWidget payments={payments} balance={balance} reserve={reserve} onBalanceChange={onBalanceChange} onReserveChange={onReserveChange} />
+            <button onClick={() => setShowAdd(true)} className="btn-primary" style={{ padding: '8px 16px', fontSize: 13, flexShrink: 0 }}>
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <path d="M8 3v10M3 8h10" />
+              </svg>
+              Přidat platbu
+            </button>
+          </>
+        )}
       </div>
 
-      {view === 'calendar' ? (
+      {view === 'calendar' && (
         payments.length === 0 ? (
           <EmptyState onAdd={() => setShowAdd(true)} />
         ) : (
           <CalendarView payments={payments} onPaymentsChange={onPaymentsChange} balance={balance} reserve={reserve} debts={debts} />
         )
-      ) : (
-        /* List view */
+      )}
+
+      {view === 'list' && (
         <div>
           {payments.length === 0 ? (
             <EmptyState onAdd={() => setShowAdd(true)} />
@@ -108,6 +117,16 @@ export function PaymentTab({ payments, onPaymentsChange, balance, reserve, onBal
             </>
           )}
         </div>
+      )}
+
+      {view === 'tracker' && (
+        <TrackerView
+          payments={payments}
+          expenses={expenses}
+          onExpensesChange={onExpensesChange}
+          income={income}
+          onIncomeChange={onIncomeChange}
+        />
       )}
 
       {showAdd && <PaymentModal onClose={() => setShowAdd(false)} onSave={handleSave} />}

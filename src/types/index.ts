@@ -64,4 +64,4 @@ export interface Expense {
   note?: string
 }
 
-export type TabId = 'debts' | 'payments' | 'savings' | 'expenses'
+export type TabId = 'debts' | 'payments' | 'savings'

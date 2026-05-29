@@ -5,7 +5,6 @@ import { useLocalStorage } from '../hooks/useLocalStorage'
 import { DebtTab } from '../components/DebtTab'
 import { PaymentTab } from '../components/PaymentTab'
 import { SavingsTab } from '../components/SavingsTab'
-import { ExpensesTab } from '../components/ExpensesTab'
 import { DEBT_COLORS, PAYMENT_COLORS, SAVINGS_COLORS } from '../utils/formatters'
 import { AppShell } from './AppShell'
 import { BackupMenu } from '../components/BackupMenu'
@@ -136,6 +135,7 @@ export function DemoApp() {
   const [expenses, setExpenses] = useLocalStorage<Expense[]>('demo-finance-expenses-v1', SAMPLE_EXPENSES)
   const [balance, setBalance] = useLocalStorage<number | null>('demo-finance-balance', null)
   const [reserve, setReserve] = useLocalStorage<number | null>('demo-finance-reserve', null)
+  const [income, setIncome] = useLocalStorage<number | null>('demo-finance-income', 45000)
 
   return (
     <AppShell
@@ -144,7 +144,6 @@ export function DemoApp() {
       debts={debts}
       payments={payments}
       goals={goals}
-      expenses={expenses}
       headerExtra={
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <BackupMenu debts={debts} payments={payments} goals={goals} expenses={expenses} onDebtsChange={setDebts} onPaymentsChange={setPayments} onGoalsChange={setGoals} onExpensesChange={setExpenses} />
@@ -153,9 +152,8 @@ export function DemoApp() {
       }
     >
       {tab === 'debts' && <DebtTab debts={debts} onDebtsChange={setDebts} />}
-      {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} balance={balance} reserve={reserve} onBalanceChange={setBalance} onReserveChange={setReserve} debts={debts} />}
+      {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} balance={balance} reserve={reserve} onBalanceChange={setBalance} onReserveChange={setReserve} debts={debts} expenses={expenses} onExpensesChange={setExpenses} income={income} onIncomeChange={setIncome} />}
       {tab === 'savings' && <SavingsTab goals={goals} onGoalsChange={setGoals} />}
-      {tab === 'expenses' && <ExpensesTab expenses={expenses} onExpensesChange={setExpenses} />}
       <QuickAddFAB debts={debts} goals={goals} onDebtsChange={setDebts} onGoalsChange={setGoals} />
     </AppShell>
   )
