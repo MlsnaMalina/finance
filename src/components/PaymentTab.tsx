@@ -284,20 +284,20 @@ function BalanceWidget({
       alignItems: 'center',
       gap: 8,
       background: 'var(--card)',
-      border: '1px solid var(--border)',
+      border: '1px solid rgba(167,139,250,0.35)',
       borderRadius: 'var(--radius-sm)',
       padding: '0 12px',
       height: 36,
       minWidth: 0,
     }}>
-      <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-display)', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
+      <span style={{ fontSize: 11, color: 'var(--violet)', fontFamily: 'var(--font-display)', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0, letterSpacing: '0.03em' }}>
         Zůstatek
       </span>
       <InlineAmount value={balance} onChange={onBalanceChange} />
 
-      <div style={{ width: 1, height: 14, background: 'var(--border)', flexShrink: 0 }} />
+      <div style={{ width: 1, height: 14, background: 'rgba(167,139,250,0.25)', flexShrink: 0 }} />
 
-      <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-display)', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
+      <span style={{ fontSize: 11, color: 'var(--rose)', fontFamily: 'var(--font-display)', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0, letterSpacing: '0.03em' }}>
         Rezerva
       </span>
       <InlineAmount value={reserve} onChange={onReserveChange} hint="Min. částka, kterou chci mít vždy k dispozici" />
