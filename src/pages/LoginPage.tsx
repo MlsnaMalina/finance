@@ -3,23 +3,38 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 export function LoginPage() {
-  const { signIn } = useAuth()
+  const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
+  const [mode, setMode] = useState<'login' | 'register'>('login')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
+    setSuccess(null)
     setLoading(true)
-    const { error } = await signIn(email, password)
-    setLoading(false)
-    if (error) {
-      setError('Nesprávný email nebo heslo.')
+
+    if (mode === 'login') {
+      const { error } = await signIn(email, password)
+      setLoading(false)
+      if (error) {
+        setError('Nesprávný email nebo heslo.')
+      } else {
+        navigate('/app')
+      }
     } else {
-      navigate('/app')
+      const { error } = await signUp(email, password)
+      setLoading(false)
+      if (error) {
+        setError('Registrace se nezdařila. Zkuste to znovu.')
+      } else {
+        setSuccess('Účet vytvořen! Zkontroluj email pro potvrzení, pak se přihlaš.')
+        setMode('login')
+      }
     }
   }
 
@@ -62,7 +77,7 @@ export function LoginPage() {
             Finance
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontFamily: 'var(--font-body)', fontSize: 14, marginTop: 6 }}>
-            Přihlásit se
+            {mode === 'login' ? 'Přihlásit se' : 'Vytvořit účet'}
           </p>
         </div>
 
@@ -131,6 +146,16 @@ export function LoginPage() {
               </p>
             )}
 
+            {success && (
+              <p style={{
+                color: 'var(--emerald)', fontFamily: 'var(--font-body)', fontSize: 13,
+                background: 'rgba(52,211,153,0.08)', border: '1px solid rgba(52,211,153,0.2)',
+                borderRadius: 8, padding: '8px 12px', margin: 0,
+              }}>
+                {success}
+              </p>
+            )}
+
             <button
               type="submit"
               disabled={loading}
@@ -143,13 +168,24 @@ export function LoginPage() {
                 transition: 'all 0.2s',
               }}
             >
-              {loading ? 'Přihlašuji…' : 'Přihlásit se'}
+              {loading ? '…' : mode === 'login' ? 'Přihlásit se' : 'Vytvořit účet'}
             </button>
           </div>
         </form>
 
+        {/* Mode toggle */}
+        <p style={{ textAlign: 'center', marginTop: 20, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}>
+          {mode === 'login' ? 'Ještě nemáš účet?' : 'Už máš účet?'}{' '}
+          <button
+            onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError(null); setSuccess(null) }}
+            style={{ color: 'var(--violet)', background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', fontSize: 13, fontWeight: 500, padding: 0 }}
+          >
+            {mode === 'login' ? 'Registrovat se' : 'Přihlásit se'}
+          </button>
+        </p>
+
         {/* Demo link */}
-        <p style={{ textAlign: 'center', marginTop: 28, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}>
+        <p style={{ textAlign: 'center', marginTop: 10, fontFamily: 'var(--font-body)', fontSize: 13, color: 'var(--text-secondary)' }}>
           Chceš ukázat aplikaci?{' '}
           <a
             href="/demo"
