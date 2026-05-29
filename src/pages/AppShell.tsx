@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import type { TabId, Debt, RecurringPayment, SavingsGoal } from '../types'
+import { formatCurrency } from '../utils/formatters'
 
 interface AppShellProps {
   tab: TabId
@@ -74,12 +75,69 @@ export function AppShell({ tab, onTabChange, debts, payments, goals, headerExtra
         </div>
       </header>
 
+      {/* Today's payments strip */}
+      <TodayStrip payments={payments} />
+
       {/* Main content */}
       <main style={{ flex: 1, position: 'relative', zIndex: 1 }}>
         <div style={{ maxWidth: 960, margin: '0 auto', padding: '32px 24px' }}>
           {children}
         </div>
       </main>
+    </div>
+  )
+}
+
+function TodayStrip({ payments }: { payments: RecurringPayment[] }) {
+  const today = new Date()
+  const day = today.getDate()
+  const month = today.getMonth() + 1
+
+  const todayPayments = payments.filter(p => {
+    if (!p.active || p.dayOfMonth !== day) return false
+    if (p.frequency === 'yearly' && p.monthOfYear !== month) return false
+    return true
+  })
+
+  if (todayPayments.length === 0) return null
+
+  const total = todayPayments.reduce((s, p) => s + p.amount, 0)
+
+  return (
+    <div style={{
+      background: 'rgba(251,191,36,0.07)',
+      borderBottom: '1px solid rgba(251,191,36,0.2)',
+      padding: '8px 24px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      flexWrap: 'wrap',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+        <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--amber)' }} />
+        <span style={{ fontSize: 12, fontFamily: 'var(--font-display)', fontWeight: 600, color: 'var(--amber)' }}>
+          Dnes odchází
+        </span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flex: 1, flexWrap: 'wrap' }}>
+        {todayPayments.map(p => (
+          <span key={p.id} style={{
+            fontSize: 11,
+            fontFamily: 'var(--font-body)',
+            color: 'var(--text-secondary)',
+            background: `${p.color}18`,
+            border: `1px solid ${p.color}30`,
+            borderRadius: 20,
+            padding: '2px 8px',
+            whiteSpace: 'nowrap',
+          }}>
+            {p.name} {formatCurrency(p.amount)}
+          </span>
+        ))}
+      </div>
+      <span style={{ fontSize: 12, fontFamily: 'var(--font-mono)', color: 'var(--amber)', fontWeight: 500, flexShrink: 0 }}>
+        {formatCurrency(total)}
+      </span>
     </div>
   )
 }
