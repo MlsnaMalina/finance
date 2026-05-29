@@ -1,17 +1,19 @@
 import type { ReactNode } from 'react'
-import type { TabId, Debt, RecurringPayment } from '../types'
+import type { TabId, Debt, RecurringPayment, SavingsGoal } from '../types'
 
 interface AppShellProps {
   tab: TabId
   onTabChange: (tab: TabId) => void
   debts: Debt[]
   payments: RecurringPayment[]
+  goals: SavingsGoal[]
   headerExtra?: ReactNode
   children: ReactNode
 }
 
-export function AppShell({ tab, onTabChange, debts, payments, headerExtra, children }: AppShellProps) {
+export function AppShell({ tab, onTabChange, debts, payments, goals, headerExtra, children }: AppShellProps) {
   const activeDebts = debts.filter(d => !d.archived)
+  const activeGoals = goals.filter(g => !g.archived)
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -67,6 +69,14 @@ export function AppShell({ tab, onTabChange, debts, payments, headerExtra, child
                 <path d="M11 1v4M5 1v4M2 7h12" />
               </svg>
               Platby
+            </TabButton>
+            <TabButton active={tab === 'savings'} onClick={() => onTabChange('savings')} badge={activeGoals.length > 0 ? activeGoals.length : undefined}>
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                <path d="M3 10a5 5 0 0 1 10 0" />
+                <path d="M8 5v2M5.5 7.5l1 1M10.5 7.5l-1 1" />
+                <path d="M2 12h12" />
+              </svg>
+              Spoření
             </TabButton>
           </nav>
 

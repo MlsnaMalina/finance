@@ -4,12 +4,13 @@ import { useSupabaseData } from '../hooks/useSupabaseData'
 import type { TabId } from '../types'
 import { DebtTab } from '../components/DebtTab'
 import { PaymentTab } from '../components/PaymentTab'
+import { SavingsTab } from '../components/SavingsTab'
 import { AppShell } from './AppShell'
 
 export function PrivateApp() {
   const { user, signOut } = useAuth()
   const [tab, setTab] = useState<TabId>('debts')
-  const { debts, setDebts, payments, setPayments, loading } = useSupabaseData(user!.id)
+  const { debts, setDebts, payments, setPayments, goals, setGoals, loading } = useSupabaseData(user!.id)
 
   if (loading) {
     return <LoadingScreen />
@@ -21,12 +22,12 @@ export function PrivateApp() {
       onTabChange={setTab}
       debts={debts}
       payments={payments}
+      goals={goals}
       headerExtra={<SignOutButton onSignOut={signOut} />}
     >
-      {tab === 'debts'
-        ? <DebtTab debts={debts} onDebtsChange={setDebts} />
-        : <PaymentTab payments={payments} onPaymentsChange={setPayments} />
-      }
+      {tab === 'debts' && <DebtTab debts={debts} onDebtsChange={setDebts} />}
+      {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} />}
+      {tab === 'savings' && <SavingsTab goals={goals} onGoalsChange={setGoals} />}
     </AppShell>
   )
 }

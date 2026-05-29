@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { TabId, Debt, RecurringPayment } from '../types'
+import type { TabId, Debt, RecurringPayment, SavingsGoal } from '../types'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { DebtTab } from '../components/DebtTab'
 import { PaymentTab } from '../components/PaymentTab'
-import { DEBT_COLORS, PAYMENT_COLORS } from '../utils/formatters'
+import { SavingsTab } from '../components/SavingsTab'
+import { DEBT_COLORS, PAYMENT_COLORS, SAVINGS_COLORS } from '../utils/formatters'
 import { AppShell } from './AppShell'
 
 const SAMPLE_DEBTS: Debt[] = [
@@ -43,11 +44,63 @@ const SAMPLE_PAYMENTS: RecurringPayment[] = [
   { id: 'sp5', name: 'Mobilní tarif', amount: 699, color: PAYMENT_COLORS[2], frequency: 'monthly', dayOfMonth: 20, category: 'Ostatní', active: true },
 ]
 
+const SAMPLE_GOALS: SavingsGoal[] = [
+  {
+    id: 'sg1',
+    name: 'Dovolená v Itálii',
+    targetAmount: 45000,
+    savedAmount: 32400,
+    color: SAVINGS_COLORS[0],
+    emoji: '✈️',
+    deposits: [
+      { id: 'sd1', amount: 5000, date: '2025-01-15', note: 'Leden' },
+      { id: 'sd2', amount: 8000, date: '2025-02-15', note: 'Únor' },
+      { id: 'sd3', amount: 7000, date: '2025-03-15' },
+      { id: 'sd4', amount: 6000, date: '2025-04-15' },
+      { id: 'sd5', amount: 6400, date: '2025-05-15' },
+    ],
+    archived: false,
+    createdAt: '2025-01-01',
+    description: 'Léto 2026',
+  },
+  {
+    id: 'sg2',
+    name: 'Nový MacBook',
+    targetAmount: 35000,
+    savedAmount: 8750,
+    color: SAVINGS_COLORS[1],
+    emoji: '💻',
+    deposits: [
+      { id: 'sd6', amount: 3000, date: '2025-03-01' },
+      { id: 'sd7', amount: 2750, date: '2025-04-01' },
+      { id: 'sd8', amount: 3000, date: '2025-05-01' },
+    ],
+    archived: false,
+    createdAt: '2025-03-01',
+  },
+  {
+    id: 'sg3',
+    name: 'Finanční rezerva',
+    targetAmount: 100000,
+    savedAmount: 28000,
+    color: SAVINGS_COLORS[2],
+    emoji: '🛡️',
+    deposits: [
+      { id: 'sd9', amount: 10000, date: '2025-01-01' },
+      { id: 'sd10', amount: 10000, date: '2025-02-01' },
+      { id: 'sd11', amount: 8000, date: '2025-03-01' },
+    ],
+    archived: false,
+    createdAt: '2025-01-01',
+  },
+]
+
 export function DemoApp() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<TabId>('debts')
   const [debts, setDebts] = useLocalStorage<Debt[]>('demo-finance-debts', SAMPLE_DEBTS)
   const [payments, setPayments] = useLocalStorage<RecurringPayment[]>('demo-finance-payments', SAMPLE_PAYMENTS)
+  const [goals, setGoals] = useLocalStorage<SavingsGoal[]>('demo-finance-goals', SAMPLE_GOALS)
 
   return (
     <AppShell
@@ -55,14 +108,12 @@ export function DemoApp() {
       onTabChange={setTab}
       debts={debts}
       payments={payments}
-      headerExtra={
-        <DemoBadge onLogin={() => navigate('/')} />
-      }
+      goals={goals}
+      headerExtra={<DemoBadge onLogin={() => navigate('/')} />}
     >
-      {tab === 'debts'
-        ? <DebtTab debts={debts} onDebtsChange={setDebts} />
-        : <PaymentTab payments={payments} onPaymentsChange={setPayments} />
-      }
+      {tab === 'debts' && <DebtTab debts={debts} onDebtsChange={setDebts} />}
+      {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} />}
+      {tab === 'savings' && <SavingsTab goals={goals} onGoalsChange={setGoals} />}
     </AppShell>
   )
 }
@@ -71,30 +122,20 @@ function DemoBadge({ onLogin }: { onLogin: () => void }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
       <span style={{
-        fontSize: 11,
-        fontFamily: 'var(--font-body)',
+        fontSize: 11, fontFamily: 'var(--font-body)',
         color: 'var(--text-secondary)',
         background: 'rgba(167,139,250,0.1)',
         border: '1px solid rgba(167,139,250,0.25)',
-        borderRadius: 20,
-        padding: '3px 10px',
-        letterSpacing: '0.04em',
+        borderRadius: 20, padding: '3px 10px', letterSpacing: '0.04em',
       }}>
         Demo verze
       </span>
       <button
         onClick={onLogin}
         style={{
-          fontSize: 12,
-          fontFamily: 'var(--font-display)',
-          fontWeight: 600,
-          color: 'var(--violet)',
-          background: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          padding: '4px 8px',
-          borderRadius: 6,
-          transition: 'background 0.15s',
+          fontSize: 12, fontFamily: 'var(--font-display)', fontWeight: 600,
+          color: 'var(--violet)', background: 'transparent', border: 'none',
+          cursor: 'pointer', padding: '4px 8px', borderRadius: 6, transition: 'background 0.15s',
         }}
         onMouseEnter={e => (e.currentTarget.style.background = 'rgba(167,139,250,0.1)')}
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}

@@ -32,4 +32,25 @@ export interface RecurringPayment {
   icon?: string
 }
 
-export type TabId = 'debts' | 'payments'
+export interface SavingsDeposit {
+  id: string
+  amount: number
+  date: string
+  note?: string
+}
+
+export interface SavingsGoal {
+  id: string
+  name: string
+  targetAmount: number
+  savedAmount: number
+  color: string
+  emoji: string
+  deposits: SavingsDeposit[]
+  archived: boolean
+  createdAt: string
+  description?: string
+  deadline?: string
+}
+
+export type TabId = 'debts' | 'payments' | 'savings'

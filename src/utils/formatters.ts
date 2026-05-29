@@ -43,6 +43,23 @@ export const PAYMENT_COLORS = [
   '#C084FC',
 ]
 
+export const SAVINGS_COLORS = [
+  '#34D399', // emerald
+  '#38BDF8', // sky
+  '#A78BFA', // violet
+  '#F472B6', // rose
+  '#FBBF24', // amber
+  '#2DD4BF', // teal
+  '#818CF8', // indigo
+  '#FB923C', // orange
+]
+
+export const SAVINGS_EMOJIS = [
+  '✈️', '🏖️', '🏠', '🚗', '💻', '📱',
+  '🎓', '💍', '🐕', '🎸', '🏋️', '🌿',
+  '🛍️', '🛡️', '🎁', '💰',
+]
+
 export const CATEGORIES = [
   'Předplatné',
   'Pojištění',

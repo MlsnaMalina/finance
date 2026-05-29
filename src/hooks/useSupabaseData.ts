@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
 import { supabase } from '../lib/supabase'
-import type { Debt, RecurringPayment } from '../types'
+import type { Debt, RecurringPayment, SavingsGoal } from '../types'
 
 interface UserData {
   debts: Debt[]
   payments: RecurringPayment[]
+  goals: SavingsGoal[]
 }
 
 interface UseSupabaseDataReturn {
@@ -12,35 +13,41 @@ interface UseSupabaseDataReturn {
   setDebts: (updater: Debt[] | ((prev: Debt[]) => Debt[])) => void
   payments: RecurringPayment[]
   setPayments: (updater: RecurringPayment[] | ((prev: RecurringPayment[]) => RecurringPayment[])) => void
+  goals: SavingsGoal[]
+  setGoals: (updater: SavingsGoal[] | ((prev: SavingsGoal[]) => SavingsGoal[])) => void
   loading: boolean
 }
 
 export function useSupabaseData(userId: string): UseSupabaseDataReturn {
   const [debts, setDebtsState] = useState<Debt[]>([])
   const [payments, setPaymentsState] = useState<RecurringPayment[]>([])
+  const [goals, setGoalsState] = useState<SavingsGoal[]>([])
   const [loading, setLoading] = useState(true)
 
-  // Refs so setter closures always see fresh values
   const debtsRef = useRef<Debt[]>([])
   const paymentsRef = useRef<RecurringPayment[]>([])
+  const goalsRef = useRef<SavingsGoal[]>([])
   const saveTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   debtsRef.current = debts
   paymentsRef.current = payments
+  goalsRef.current = goals
 
   useEffect(() => {
     let cancelled = false
 
     supabase
       .from('user_data')
-      .select('debts, payments')
+      .select('debts, payments, goals')
       .eq('user_id', userId)
       .maybeSingle()
       .then(({ data }) => {
         if (!cancelled) {
           if (data) {
-            setDebtsState((data as UserData).debts ?? [])
-            setPaymentsState((data as UserData).payments ?? [])
+            const d = data as UserData
+            setDebtsState(d.debts ?? [])
+            setPaymentsState(d.payments ?? [])
+            setGoalsState(d.goals ?? [])
           }
           setLoading(false)
         }
@@ -49,7 +56,7 @@ export function useSupabaseData(userId: string): UseSupabaseDataReturn {
     return () => { cancelled = true }
   }, [userId])
 
-  function persist(nextDebts: Debt[], nextPayments: RecurringPayment[]) {
+  function persist(nextDebts: Debt[], nextPayments: RecurringPayment[], nextGoals: SavingsGoal[]) {
     if (saveTimeout.current) clearTimeout(saveTimeout.current)
     saveTimeout.current = setTimeout(() => {
       supabase
@@ -58,6 +65,7 @@ export function useSupabaseData(userId: string): UseSupabaseDataReturn {
           user_id: userId,
           debts: nextDebts,
           payments: nextPayments,
+          goals: nextGoals,
           updated_at: new Date().toISOString(),
         })
         .then(() => {})
@@ -67,7 +75,7 @@ export function useSupabaseData(userId: string): UseSupabaseDataReturn {
   function setDebts(updater: Debt[] | ((prev: Debt[]) => Debt[])) {
     setDebtsState(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
-      persist(next, paymentsRef.current)
+      persist(next, paymentsRef.current, goalsRef.current)
       return next
     })
   }
@@ -75,10 +83,18 @@ export function useSupabaseData(userId: string): UseSupabaseDataReturn {
   function setPayments(updater: RecurringPayment[] | ((prev: RecurringPayment[]) => RecurringPayment[])) {
     setPaymentsState(prev => {
       const next = typeof updater === 'function' ? updater(prev) : updater
-      persist(debtsRef.current, next)
+      persist(debtsRef.current, next, goalsRef.current)
       return next
     })
   }
 
-  return { debts, setDebts, payments, setPayments, loading }
+  function setGoals(updater: SavingsGoal[] | ((prev: SavingsGoal[]) => SavingsGoal[])) {
+    setGoalsState(prev => {
+      const next = typeof updater === 'function' ? updater(prev) : updater
+      persist(debtsRef.current, paymentsRef.current, next)
+      return next
+    })
+  }
+
+  return { debts, setDebts, payments, setPayments, goals, setGoals, loading }
 }
