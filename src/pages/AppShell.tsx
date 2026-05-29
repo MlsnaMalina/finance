@@ -44,9 +44,9 @@ export function AppShell({ tab, onTabChange, debts, payments, goals, headerExtra
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 4px 12px rgba(167,139,250,0.3)',
             }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round">
-                <circle cx="8" cy="8" r="6" />
-                <path d="M8 5v3l2 2" />
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="white" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 12l4-5 3 3 5-7" />
+                <path d="M11 3h3v3" />
               </svg>
             </div>
             <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 16, letterSpacing: '-0.02em' }}>
@@ -57,24 +57,28 @@ export function AppShell({ tab, onTabChange, debts, payments, goals, headerExtra
           {/* Center: tab switcher */}
           <nav style={{ display: 'flex', gap: 2, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 3 }}>
             <TabButton active={tab === 'debts'} onClick={() => onTabChange('debts')} badge={activeDebts.length > 0 ? activeDebts.length : undefined}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                <circle cx="8" cy="8" r="6" strokeDasharray="3 2" />
-                <path d="M8 5v3l1.5 1.5" />
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="1.5" y="4.5" width="13" height="8.5" rx="1.5" />
+                <path d="M1.5 7.5h13" />
+                <path d="M4.5 11h3" />
               </svg>
               Dluhy
             </TabButton>
             <TabButton active={tab === 'payments'} onClick={() => onTabChange('payments')} badge={payments.filter(p => p.active).length > 0 ? payments.filter(p => p.active).length : undefined}>
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                <rect x="2" y="3" width="12" height="12" rx="2" />
-                <path d="M11 1v4M5 1v4M2 7h12" />
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="3" width="12" height="11" rx="1.5" />
+                <path d="M2 7h12M5 1.5v3M11 1.5v3" />
+                <circle cx="5.5" cy="10.5" r="1" fill="currentColor" stroke="none" />
+                <circle cx="8" cy="10.5" r="1" fill="currentColor" stroke="none" />
+                <circle cx="10.5" cy="10.5" r="1" fill="currentColor" stroke="none" />
               </svg>
               Platby
             </TabButton>
             <TabButton active={tab === 'savings'} onClick={() => onTabChange('savings')} badge={activeGoals.length > 0 ? activeGoals.length : undefined}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                <path d="M3 10a5 5 0 0 1 10 0" />
-                <path d="M8 5v2M5.5 7.5l1 1M10.5 7.5l-1 1" />
-                <path d="M2 12h12" />
+                <circle cx="8" cy="8" r="6" />
+                <circle cx="8" cy="8" r="3" />
+                <circle cx="8" cy="8" r="1.2" fill="currentColor" stroke="none" />
               </svg>
               Spoření
             </TabButton>

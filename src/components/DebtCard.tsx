@@ -109,7 +109,11 @@ export function DebtCard({ debt, onUpdate, onArchive, onDelete, index }: DebtCar
                     onMouseEnter={e => (e.currentTarget.style.background = 'var(--border)')}
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
-                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5M3 4l1 10h8l1-10" strokeLinecap="round"/></svg>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M2 6h12v8H2z" />
+                      <path d="M1 3h14v3H1z" />
+                      <path d="M6 10h4" />
+                    </svg>
                     Archivovat
                   </button>
                 )}

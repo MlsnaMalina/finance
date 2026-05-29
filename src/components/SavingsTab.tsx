@@ -80,8 +80,9 @@ export function SavingsTab({ goals, onGoalsChange }: SavingsTabProps) {
             margin: '0 auto 20px',
           }}>
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" strokeWidth="1.5" strokeLinecap="round">
-              <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z" />
-              <path d="M12 6v6l4 2" />
+              <circle cx="12" cy="12" r="9" />
+              <circle cx="12" cy="12" r="5" />
+              <circle cx="12" cy="12" r="2" fill="var(--emerald)" stroke="none" />
             </svg>
           </div>
           <h3 style={{ fontFamily: 'var(--font-display)', fontSize: 18, marginBottom: 8 }}>Žádné cíle spoření</h3>
