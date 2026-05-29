@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import type { TabId, Debt, RecurringPayment, SavingsGoal } from '../types'
+import type { TabId, Debt, RecurringPayment, SavingsGoal, Expense } from '../types'
 import { formatCurrency } from '../utils/formatters'
 
 interface AppShellProps {
@@ -8,13 +8,19 @@ interface AppShellProps {
   debts: Debt[]
   payments: RecurringPayment[]
   goals: SavingsGoal[]
+  expenses: Expense[]
   headerExtra?: ReactNode
   children: ReactNode
 }
 
-export function AppShell({ tab, onTabChange, debts, payments, goals, headerExtra, children }: AppShellProps) {
+export function AppShell({ tab, onTabChange, debts, payments, goals, expenses, headerExtra, children }: AppShellProps) {
   const activeDebts = debts.filter(d => !d.archived)
   const activeGoals = goals.filter(g => !g.archived)
+  const now = new Date()
+  const thisMonthExpenses = expenses.filter(e => {
+    const d = new Date(e.date)
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth()
+  }).length
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -65,6 +71,9 @@ export function AppShell({ tab, onTabChange, debts, payments, goals, headerExtra
             </TabButton>
             <TabButton active={tab === 'savings'} onClick={() => onTabChange('savings')} badge={activeGoals.length > 0 ? activeGoals.length : undefined}>
               Spoření
+            </TabButton>
+            <TabButton active={tab === 'expenses'} onClick={() => onTabChange('expenses')} badge={thisMonthExpenses > 0 ? thisMonthExpenses : undefined}>
+              Výdaje
             </TabButton>
           </nav>
 

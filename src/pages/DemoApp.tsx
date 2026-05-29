@@ -1,10 +1,11 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { TabId, Debt, RecurringPayment, SavingsGoal } from '../types'
+import type { TabId, Debt, RecurringPayment, SavingsGoal, Expense } from '../types'
 import { useLocalStorage } from '../hooks/useLocalStorage'
 import { DebtTab } from '../components/DebtTab'
 import { PaymentTab } from '../components/PaymentTab'
 import { SavingsTab } from '../components/SavingsTab'
+import { ExpensesTab } from '../components/ExpensesTab'
 import { DEBT_COLORS, PAYMENT_COLORS, SAVINGS_COLORS } from '../utils/formatters'
 import { AppShell } from './AppShell'
 import { BackupMenu } from '../components/BackupMenu'
@@ -101,12 +102,38 @@ const SAMPLE_GOALS: SavingsGoal[] = [
   },
 ]
 
+const now = new Date()
+const thisMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+const lastMonth = (() => {
+  const d = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+})()
+
+const SAMPLE_EXPENSES: Expense[] = [
+  { id: 'ex1', name: 'Potraviny Albert', amount: 865, category: 'Jídlo & nákupy', date: `${thisMonth}-03` },
+  { id: 'ex2', name: 'Kavárna', amount: 89, category: 'Restaurace & kavárny', date: `${thisMonth}-05` },
+  { id: 'ex3', name: 'Rohlíky pekárna', amount: 42, category: 'Jídlo & nákupy', date: `${thisMonth}-07` },
+  { id: 'ex4', name: 'MHD měsíční', amount: 550, category: 'Doprava', date: `${thisMonth}-08` },
+  { id: 'ex5', name: 'Oběd s kolegy', amount: 245, category: 'Restaurace & kavárny', date: `${thisMonth}-10` },
+  { id: 'ex6', name: 'Lékárna', amount: 320, category: 'Zdraví & krása', date: `${thisMonth}-12` },
+  { id: 'ex7', name: 'Kino', amount: 219, category: 'Zábava', date: `${thisMonth}-14` },
+  { id: 'ex8', name: 'Potraviny Lidl', amount: 730, category: 'Jídlo & nákupy', date: `${thisMonth}-17` },
+  { id: 'ex9', name: 'Benzín', amount: 1200, category: 'Doprava', date: `${thisMonth}-19` },
+  { id: 'ex10', name: 'Drogerie DM', amount: 445, category: 'Drogerie', date: `${thisMonth}-21` },
+  { id: 'ex11', name: 'Tričko', amount: 399, category: 'Oblečení', date: `${thisMonth}-23` },
+  { id: 'ex12', name: 'Potraviny Albert', amount: 920, category: 'Jídlo & nákupy', date: `${lastMonth}-05` },
+  { id: 'ex13', name: 'Restaurace', amount: 380, category: 'Restaurace & kavárny', date: `${lastMonth}-12` },
+  { id: 'ex14', name: 'MHD měsíční', amount: 550, category: 'Doprava', date: `${lastMonth}-08` },
+  { id: 'ex15', name: 'Kniha', amount: 329, category: 'Zábava', date: `${lastMonth}-20` },
+]
+
 export function DemoApp() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<TabId>('debts')
   const [debts, setDebts] = useLocalStorage<Debt[]>('demo-finance-debts-v2', SAMPLE_DEBTS)
   const [payments, setPayments] = useLocalStorage<RecurringPayment[]>('demo-finance-payments-v2', SAMPLE_PAYMENTS)
   const [goals, setGoals] = useLocalStorage<SavingsGoal[]>('demo-finance-goals-v2', SAMPLE_GOALS)
+  const [expenses, setExpenses] = useLocalStorage<Expense[]>('demo-finance-expenses-v1', SAMPLE_EXPENSES)
   const [balance, setBalance] = useLocalStorage<number | null>('demo-finance-balance', null)
   const [reserve, setReserve] = useLocalStorage<number | null>('demo-finance-reserve', null)
 
@@ -117,9 +144,10 @@ export function DemoApp() {
       debts={debts}
       payments={payments}
       goals={goals}
+      expenses={expenses}
       headerExtra={
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <BackupMenu debts={debts} payments={payments} goals={goals} onDebtsChange={setDebts} onPaymentsChange={setPayments} onGoalsChange={setGoals} />
+          <BackupMenu debts={debts} payments={payments} goals={goals} expenses={expenses} onDebtsChange={setDebts} onPaymentsChange={setPayments} onGoalsChange={setGoals} onExpensesChange={setExpenses} />
           <DemoBadge onLogin={() => navigate('/')} />
         </div>
       }
@@ -127,6 +155,7 @@ export function DemoApp() {
       {tab === 'debts' && <DebtTab debts={debts} onDebtsChange={setDebts} />}
       {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} balance={balance} reserve={reserve} onBalanceChange={setBalance} onReserveChange={setReserve} debts={debts} />}
       {tab === 'savings' && <SavingsTab goals={goals} onGoalsChange={setGoals} />}
+      {tab === 'expenses' && <ExpensesTab expenses={expenses} onExpensesChange={setExpenses} />}
       <QuickAddFAB debts={debts} goals={goals} onDebtsChange={setDebts} onGoalsChange={setGoals} />
     </AppShell>
   )

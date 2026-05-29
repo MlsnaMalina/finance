@@ -65,6 +65,18 @@ export const CATEGORIES = [
   'Ostatní',
 ]
 
+export const EXPENSE_CATEGORIES: { name: string; emoji: string; color: string }[] = [
+  { name: 'Jídlo & nákupy', emoji: '🛒', color: '#34D399' },
+  { name: 'Restaurace & kavárny', emoji: '☕', color: '#F472B6' },
+  { name: 'Doprava', emoji: '🚗', color: '#38BDF8' },
+  { name: 'Zábava', emoji: '🎮', color: '#A78BFA' },
+  { name: 'Zdraví & krása', emoji: '💊', color: '#2DD4BF' },
+  { name: 'Oblečení', emoji: '👗', color: '#FB923C' },
+  { name: 'Drogerie', emoji: '🧴', color: '#FBBF24' },
+  { name: 'Elektronika', emoji: '💻', color: '#818CF8' },
+  { name: 'Ostatní', emoji: '📦', color: '#8892B0' },
+]
+
 export const MONTH_NAMES = [
   'Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen',
   'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec',

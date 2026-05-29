@@ -6,6 +6,7 @@ import type { TabId } from '../types'
 import { DebtTab } from '../components/DebtTab'
 import { PaymentTab } from '../components/PaymentTab'
 import { SavingsTab } from '../components/SavingsTab'
+import { ExpensesTab } from '../components/ExpensesTab'
 import { AppShell } from './AppShell'
 import { BackupMenu } from '../components/BackupMenu'
 import { QuickAddFAB } from '../components/QuickAddFAB'
@@ -13,7 +14,7 @@ import { QuickAddFAB } from '../components/QuickAddFAB'
 export function PrivateApp() {
   const { user, signOut } = useAuth()
   const [tab, setTab] = useState<TabId>('debts')
-  const { debts, setDebts, payments, setPayments, goals, setGoals, loading } = useSupabaseData(user!.id)
+  const { debts, setDebts, payments, setPayments, goals, setGoals, expenses, setExpenses, loading } = useSupabaseData(user!.id)
   const [balance, setBalance] = useLocalStorage<number | null>(`finance-balance-${user!.id}`, null)
   const [reserve, setReserve] = useLocalStorage<number | null>(`finance-reserve-${user!.id}`, null)
 
@@ -28,9 +29,10 @@ export function PrivateApp() {
       debts={debts}
       payments={payments}
       goals={goals}
+      expenses={expenses}
       headerExtra={
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <BackupMenu debts={debts} payments={payments} goals={goals} onDebtsChange={setDebts} onPaymentsChange={setPayments} onGoalsChange={setGoals} />
+          <BackupMenu debts={debts} payments={payments} goals={goals} expenses={expenses} onDebtsChange={setDebts} onPaymentsChange={setPayments} onGoalsChange={setGoals} onExpensesChange={setExpenses} />
           <SignOutButton onSignOut={signOut} />
         </div>
       }
@@ -38,6 +40,7 @@ export function PrivateApp() {
       {tab === 'debts' && <DebtTab debts={debts} onDebtsChange={setDebts} />}
       {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} balance={balance} reserve={reserve} onBalanceChange={setBalance} onReserveChange={setReserve} debts={debts} />}
       {tab === 'savings' && <SavingsTab goals={goals} onGoalsChange={setGoals} />}
+      {tab === 'expenses' && <ExpensesTab expenses={expenses} onExpensesChange={setExpenses} />}
       <QuickAddFAB debts={debts} goals={goals} onDebtsChange={setDebts} onGoalsChange={setGoals} />
     </AppShell>
   )

@@ -55,4 +55,13 @@ export interface SavingsGoal {
   deadline?: string
 }
 
-export type TabId = 'debts' | 'payments' | 'savings'
+export interface Expense {
+  id: string
+  amount: number
+  name: string
+  category: string
+  date: string
+  note?: string
+}
+
+export type TabId = 'debts' | 'payments' | 'savings' | 'expenses'

@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import type { Debt, RecurringPayment, SavingsGoal } from '../types'
+import type { Debt, RecurringPayment, SavingsGoal, Expense } from '../types'
 
 interface BackupData {
   version: number
@@ -7,18 +7,21 @@ interface BackupData {
   debts: Debt[]
   payments: RecurringPayment[]
   goals: SavingsGoal[]
+  expenses: Expense[]
 }
 
 interface BackupMenuProps {
   debts: Debt[]
   payments: RecurringPayment[]
   goals: SavingsGoal[]
+  expenses: Expense[]
   onDebtsChange: (d: Debt[]) => void
   onPaymentsChange: (p: RecurringPayment[]) => void
   onGoalsChange: (g: SavingsGoal[]) => void
+  onExpensesChange: (e: Expense[]) => void
 }
 
-export function BackupMenu({ debts, payments, goals, onDebtsChange, onPaymentsChange, onGoalsChange }: BackupMenuProps) {
+export function BackupMenu({ debts, payments, goals, expenses, onDebtsChange, onPaymentsChange, onGoalsChange, onExpensesChange }: BackupMenuProps) {
   const [open, setOpen] = useState(false)
   const [importing, setImporting] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -26,11 +29,12 @@ export function BackupMenu({ debts, payments, goals, onDebtsChange, onPaymentsCh
 
   function handleExport() {
     const data: BackupData = {
-      version: 1,
+      version: 2,
       exportedAt: new Date().toISOString().split('T')[0],
       debts,
       payments,
       goals,
+      expenses,
     }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -64,6 +68,7 @@ export function BackupMenu({ debts, payments, goals, onDebtsChange, onPaymentsCh
         onDebtsChange(raw.debts)
         onPaymentsChange(raw.payments)
         onGoalsChange(raw.goals)
+        onExpensesChange(raw.expenses ?? [])
         setImporting(false)
         setOpen(false)
       } catch {
