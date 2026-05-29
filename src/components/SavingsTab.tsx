@@ -138,7 +138,6 @@ export function SavingsTab({ goals, onGoalsChange }: SavingsTabProps) {
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontSize: 20 }}>{g.emoji}</span>
                     <div>
                       <p style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600 }}>{g.name}</p>
                       <p style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>

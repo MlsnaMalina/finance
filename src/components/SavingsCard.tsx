@@ -66,7 +66,6 @@ export function SavingsCard({ goal, onUpdate, onArchive, onDelete, index }: Savi
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 24, lineHeight: 1, flexShrink: 0 }}>{goal.emoji}</span>
             <div>
               <h3 style={{
                 fontFamily: 'var(--font-display)',
