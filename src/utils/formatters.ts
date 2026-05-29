@@ -54,11 +54,6 @@ export const SAVINGS_COLORS = [
   '#FB923C', // orange
 ]
 
-export const SAVINGS_EMOJIS = [
-  '✈️', '🏖️', '🏠', '🚗', '💻', '📱',
-  '🎓', '💍', '🐕', '🎸', '🏋️', '🌿',
-  '🛍️', '🛡️', '🎁', '💰',
-]
 
 export const CATEGORIES = [
   'Předplatné',

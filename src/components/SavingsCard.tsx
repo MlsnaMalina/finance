@@ -272,7 +272,7 @@ function DepositModal({
       <div className="modal-box" style={{ padding: '32px' }}>
         <div style={{ marginBottom: 24 }}>
           <p style={{ fontSize: 12, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
-            {goal.emoji} {goal.name}
+            {goal.name}
           </p>
           <h2 style={{ fontSize: 22, letterSpacing: '-0.03em' }}>Přidat vklad</h2>
         </div>

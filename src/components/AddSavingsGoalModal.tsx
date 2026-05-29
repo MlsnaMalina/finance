@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { SavingsGoal } from '../types'
-import { SAVINGS_COLORS, SAVINGS_EMOJIS, generateId } from '../utils/formatters'
+import { SAVINGS_COLORS, generateId } from '../utils/formatters'
 
 interface AddSavingsGoalModalProps {
   onClose: () => void
@@ -13,7 +13,6 @@ export function AddSavingsGoalModal({ onClose, onSave }: AddSavingsGoalModalProp
   const [saved, setSaved] = useState('')
   const [description, setDescription] = useState('')
   const [color, setColor] = useState(SAVINGS_COLORS[0])
-  const [emoji, setEmoji] = useState(SAVINGS_EMOJIS[0])
 
   const targetNum = parseFloat(target.replace(',', '.')) || 0
   const savedNum = parseFloat(saved.replace(',', '.')) || 0
@@ -28,7 +27,7 @@ export function AddSavingsGoalModal({ onClose, onSave }: AddSavingsGoalModalProp
       targetAmount: targetNum,
       savedAmount: Math.min(savedNum, targetNum),
       color,
-      emoji,
+      emoji: '',
       deposits: savedNum > 0
         ? [{ id: generateId(), amount: Math.min(savedNum, targetNum), date: new Date().toISOString().split('T')[0], note: 'Počáteční stav' }]
         : [],
@@ -48,36 +47,6 @@ export function AddSavingsGoalModal({ onClose, onSave }: AddSavingsGoalModalProp
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {/* Emoji picker */}
-          <div>
-            <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 8 }}>Ikona</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {SAVINGS_EMOJIS.map(e => (
-                <button
-                  key={e}
-                  type="button"
-                  onClick={() => setEmoji(e)}
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 8,
-                    fontSize: 20,
-                    lineHeight: 1,
-                    border: emoji === e ? '2px solid var(--violet)' : '2px solid var(--border)',
-                    background: emoji === e ? 'var(--violet-dim)' : 'var(--card)',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {e}
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div>
             <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Název</label>
             <input
