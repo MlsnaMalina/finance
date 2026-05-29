@@ -24,7 +24,7 @@ export function GaugeChart({ pct, color, savedAmount, targetAmount, uid, delayMs
   const sw = 13
   const circ = Math.PI * r
 
-  const arcPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 0 ${cx + r} ${cy}`
+  const arcPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`
   const needleLen = 69
   const needleAngle = -90 + animPct * 180
   const isComplete = pct >= 1
