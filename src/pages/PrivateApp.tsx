@@ -36,7 +36,7 @@ export function PrivateApp() {
       }
     >
       {tab === 'debts' && <DebtTab debts={debts} onDebtsChange={setDebts} />}
-      {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} balance={balance} reserve={reserve} onBalanceChange={setBalance} onReserveChange={setReserve} />}
+      {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} balance={balance} reserve={reserve} onBalanceChange={setBalance} onReserveChange={setReserve} debts={debts} />}
       {tab === 'savings' && <SavingsTab goals={goals} onGoalsChange={setGoals} />}
       <QuickAddFAB debts={debts} goals={goals} onDebtsChange={setDebts} onGoalsChange={setGoals} />
     </AppShell>

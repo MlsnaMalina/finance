@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { RecurringPayment } from '../types'
+import type { RecurringPayment, Debt } from '../types'
 import { formatCurrency, MONTH_NAMES, DAY_NAMES } from '../utils/formatters'
 import { PaymentModal } from './PaymentModal'
 
@@ -8,6 +8,7 @@ interface CalendarViewProps {
   onPaymentsChange: (payments: RecurringPayment[]) => void
   balance?: number | null
   reserve?: number | null
+  debts?: Debt[]
 }
 
 function getPaymentsForDay(payments: RecurringPayment[], day: number, month: number): RecurringPayment[] {
@@ -32,7 +33,7 @@ function getMinBalanceForDay(payments: RecurringPayment[], day: number, month: n
   return total
 }
 
-export function CalendarView({ payments, onPaymentsChange, balance, reserve }: CalendarViewProps) {
+export function CalendarView({ payments, onPaymentsChange, balance, reserve, debts = [] }: CalendarViewProps) {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth() + 1)
@@ -62,6 +63,21 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve }: C
   // Monthly total (only recurring monthly)
   const monthlyTotal = payments.filter(p => p.active && p.frequency === 'monthly').reduce((s, p) => s + p.amount, 0)
 
+  // Countdown to nearest upcoming yearly payment
+  const nextYearly = (() => {
+    const upcoming = payments
+      .filter(p => p.active && p.frequency === 'yearly' && p.monthOfYear != null)
+      .map(p => {
+        const thisYear = new Date(today.getFullYear(), (p.monthOfYear! - 1), p.dayOfMonth)
+        const nextYear = new Date(today.getFullYear() + 1, (p.monthOfYear! - 1), p.dayOfMonth)
+        const target = thisYear >= today ? thisYear : nextYear
+        const days = Math.ceil((target.getTime() - today.setHours(0,0,0,0)) / 86400000)
+        return { payment: p, days, date: target }
+      })
+      .sort((a, b) => a.days - b.days)
+    return upcoming[0] ?? null
+  })()
+
   function handleSavePayment(p: RecurringPayment) {
     const exists = payments.find(x => x.id === p.id)
     if (exists) onPaymentsChange(payments.map(x => x.id === p.id ? p : x))
@@ -82,19 +98,47 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve }: C
   // Pad to complete last row
   while (cells.length % 7 !== 0) cells.push(null)
 
+  const activeDebtsWithPayment = debts.filter(d => !d.archived && d.monthlyPayment && d.monthlyPayment > 0)
+  const debtMonthlyTotal = activeDebtsWithPayment.reduce((s, d) => s + (d.monthlyPayment ?? 0), 0)
+
   return (
     <div>
       {/* Month summary */}
-      {monthTotal > 0 && (
+      {(monthTotal > 0 || debtMonthlyTotal > 0) && (
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(3, 1fr)',
           gap: 12,
-          marginBottom: 28,
+          marginBottom: nextYearly ? 12 : 28,
         }}>
           <SummaryCard label="Celkem tento měsíc" value={formatCurrency(monthTotal)} color="var(--violet)" />
           <SummaryCard label="Měsíční platby" value={formatCurrency(monthlyTotal)} color="var(--sky)" />
           <SummaryCard label="Jednorázové (letos)" value={formatCurrency(monthTotal - monthlyTotal)} color="var(--amber)" />
+        </div>
+      )}
+
+      {/* Countdown to nearest yearly payment */}
+      {nextYearly && (
+        <div style={{
+          marginBottom: 20,
+          padding: '10px 16px',
+          background: 'rgba(251,191,36,0.07)',
+          border: '1px solid rgba(251,191,36,0.2)',
+          borderRadius: 'var(--radius-sm)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+        }}>
+          <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--amber)', flexShrink: 0 }} />
+          <span style={{ fontSize: 12, color: 'var(--amber)', fontFamily: 'var(--font-display)', fontWeight: 600 }}>
+            {nextYearly.days === 0 ? 'Dnes' : `Za ${nextYearly.days} ${nextYearly.days === 1 ? 'den' : nextYearly.days < 5 ? 'dny' : 'dní'}`}
+          </span>
+          <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+            {nextYearly.payment.name} — {formatCurrency(nextYearly.payment.amount)}
+          </span>
+          <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 'auto' }}>
+            {nextYearly.date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long', year: 'numeric' })}
+          </span>
         </div>
       )}
 
@@ -142,6 +186,8 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve }: C
             return <div key={`empty-${idx}`} />
           }
           const dayPayments = getPaymentsForDay(payments, day, month)
+          const dayDebts = activeDebtsWithPayment.filter(d => (d.monthlyPaymentDay ?? 1) === day)
+          const hasYearly = dayPayments.some(p => p.frequency === 'yearly')
           const minBalance = getMinBalanceForDay(payments, day, month, daysInMonth)
           const isToday = isCurrentMonth && day === today.getDate()
           const isPast = isCurrentMonth && day < today.getDate()
@@ -159,8 +205,8 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve }: C
               key={day}
               onClick={() => setAddForDay(day)}
               style={{
-                background: isToday ? 'var(--violet-dim)' : 'var(--card)',
-                border: `1px solid ${isToday ? 'var(--violet)' : 'var(--border)'}`,
+                background: isToday ? 'var(--violet-dim)' : hasYearly ? 'rgba(251,191,36,0.04)' : 'var(--card)',
+                border: `1px solid ${isToday ? 'var(--violet)' : hasYearly ? 'rgba(251,191,36,0.3)' : 'var(--border)'}`,
                 borderRadius: 'var(--radius-md)',
                 padding: '10px 8px 8px',
                 cursor: 'pointer',
@@ -210,8 +256,8 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve }: C
                 </span>
               )}
 
-              {/* Payment dots */}
-              {dayPayments.length > 0 && (
+              {/* Payment chips */}
+              {(dayPayments.length > 0 || dayDebts.length > 0) && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 'auto', flex: 1, justifyContent: 'flex-end' }}>
                   {dayPayments.slice(0, 3).map(p => (
                     <div
@@ -223,15 +269,20 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve }: C
                         gap: 4,
                         padding: '2px 5px',
                         borderRadius: 4,
-                        background: `${p.color}1A`,
-                        border: `1px solid ${p.color}33`,
+                        background: p.frequency === 'yearly' ? 'rgba(251,191,36,0.12)' : `${p.color}1A`,
+                        border: `1px solid ${p.frequency === 'yearly' ? 'rgba(251,191,36,0.35)' : `${p.color}33`}`,
                         cursor: 'pointer',
                       }}
                     >
-                      <div style={{ width: 5, height: 5, borderRadius: '50%', background: p.color, flexShrink: 0 }} />
+                      {p.frequency === 'yearly' && (
+                        <span style={{ fontSize: 7, fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--amber)', letterSpacing: '0.04em', flexShrink: 0 }}>ROK</span>
+                      )}
+                      {p.frequency !== 'yearly' && (
+                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: p.color, flexShrink: 0 }} />
+                      )}
                       <span style={{
                         fontSize: 9,
-                        color: p.color,
+                        color: p.frequency === 'yearly' ? 'var(--amber)' : p.color,
                         fontFamily: 'var(--font-mono)',
                         fontWeight: 500,
                         whiteSpace: 'nowrap',
@@ -243,7 +294,44 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve }: C
                       </span>
                     </div>
                   ))}
-                  {dayPayments.length > 3 && (
+                  {dayDebts.slice(0, 2).map(d => (
+                    <div
+                      key={d.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '2px 5px',
+                        borderRadius: 4,
+                        background: `${d.color}18`,
+                        border: `1px dashed ${d.color}55`,
+                        cursor: 'default',
+                      }}
+                    >
+                      <svg width="6" height="6" viewBox="0 0 10 10" fill={d.color} style={{ flexShrink: 0 }}>
+                        <path d="M5 0C3.3 0 2 1.3 2 3c0 1 .5 1.9 1.2 2.5L5 10l1.8-4.5C7.5 4.9 8 4 8 3c0-1.7-1.3-3-3-3z" />
+                      </svg>
+                      <span style={{
+                        fontSize: 9,
+                        color: d.color,
+                        fontFamily: 'var(--font-mono)',
+                        fontWeight: 500,
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: '100%',
+                        opacity: 0.85,
+                      }}>
+                        {formatCurrency(d.monthlyPayment!)}
+                      </span>
+                    </div>
+                  ))}
+                  {(dayPayments.length + dayDebts.length) > 5 && (
+                    <span style={{ fontSize: 9, color: 'var(--text-tertiary)', paddingLeft: 5 }}>
+                      +{dayPayments.length + dayDebts.length - 5}
+                    </span>
+                  )}
+                  {dayPayments.length > 3 && dayDebts.length === 0 && (
                     <span style={{ fontSize: 9, color: 'var(--text-tertiary)', paddingLeft: 5 }}>
                       +{dayPayments.length - 3}
                     </span>

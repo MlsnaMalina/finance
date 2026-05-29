@@ -21,6 +21,17 @@ export function DebtCard({ debt, onUpdate, onArchive, onDelete, index }: DebtCar
   const remaining = Math.max(debt.totalAmount - debt.paidAmount, 0)
   const isComplete = debt.paidAmount >= debt.totalAmount
 
+  const payoffMonths = debt.monthlyPayment && debt.monthlyPayment > 0 && remaining > 0
+    ? Math.ceil(remaining / debt.monthlyPayment)
+    : null
+  const payoffDate = payoffMonths !== null
+    ? (() => {
+        const d = new Date()
+        d.setMonth(d.getMonth() + payoffMonths)
+        return d.toLocaleDateString('cs-CZ', { month: 'long', year: 'numeric' })
+      })()
+    : null
+
   return (
     <>
       <div
@@ -171,6 +182,17 @@ export function DebtCard({ debt, onUpdate, onArchive, onDelete, index }: DebtCar
             <StatRow label="Celkem" value={formatCurrency(debt.totalAmount)} />
             <StatRow label="Splaceno" value={formatCurrency(debt.paidAmount)} color={debt.color} />
             <StatRow label="Zbývá" value={formatCurrency(remaining)} emphasis />
+            {payoffMonths !== null && (
+              <div>
+                <p style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 2, textTransform: 'uppercase', letterSpacing: '0.06em', fontWeight: 500 }}>Splaceno za</p>
+                <p style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--amber)', letterSpacing: '-0.02em' }}>
+                  ~{payoffMonths} {payoffMonths === 1 ? 'měsíc' : payoffMonths < 5 ? 'měsíce' : 'měsíců'}
+                  <span style={{ fontSize: 10, color: 'var(--text-tertiary)', marginLeft: 5, fontFamily: 'var(--font-body)' }}>
+                    ({payoffDate})
+                  </span>
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

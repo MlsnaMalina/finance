@@ -14,15 +14,27 @@ export function AddDebtModal({ onClose, onSave, debt: editing }: AddDebtModalPro
   const [paid, setPaid] = useState('')
   const [description, setDescription] = useState(editing?.description ?? '')
   const [color, setColor] = useState(editing?.color ?? DEBT_COLORS[0])
+  const [monthlyPayment, setMonthlyPayment] = useState(editing?.monthlyPayment ? String(editing.monthlyPayment) : '')
+  const [monthlyPaymentDay, setMonthlyPaymentDay] = useState(editing?.monthlyPaymentDay ? String(editing.monthlyPaymentDay) : '')
 
   const totalNum = parseFloat(total.replace(',', '.')) || 0
   const paidNum = parseFloat(paid.replace(',', '.')) || 0
+  const monthlyNum = parseFloat(monthlyPayment.replace(',', '.')) || 0
+  const dayNum = parseInt(monthlyPaymentDay) || undefined
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim() || totalNum <= 0) return
     if (editing) {
-      onSave({ ...editing, name: name.trim(), totalAmount: totalNum, color, description: description.trim() || undefined })
+      onSave({
+        ...editing,
+        name: name.trim(),
+        totalAmount: totalNum,
+        color,
+        description: description.trim() || undefined,
+        monthlyPayment: monthlyNum > 0 ? monthlyNum : undefined,
+        monthlyPaymentDay: monthlyNum > 0 && dayNum ? dayNum : undefined,
+      })
     } else {
       const debt: Debt = {
         id: generateId(),
@@ -34,6 +46,8 @@ export function AddDebtModal({ onClose, onSave, debt: editing }: AddDebtModalPro
         archived: false,
         createdAt: new Date().toISOString(),
         description: description.trim() || undefined,
+        monthlyPayment: monthlyNum > 0 ? monthlyNum : undefined,
+        monthlyPaymentDay: monthlyNum > 0 && dayNum ? dayNum : undefined,
       }
       onSave(debt)
     }
@@ -96,6 +110,32 @@ export function AddDebtModal({ onClose, onSave, debt: editing }: AddDebtModalPro
                 />
               </div>
             )}
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div>
+              <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Měsíční splátka (Kč, volitelné)</label>
+              <input
+                className="input-base"
+                type="text"
+                inputMode="decimal"
+                placeholder="Např. 5 000"
+                value={monthlyPayment}
+                onChange={e => setMonthlyPayment(e.target.value)}
+              />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Den splátky v měsíci</label>
+              <input
+                className="input-base"
+                type="text"
+                inputMode="numeric"
+                placeholder="Např. 15"
+                value={monthlyPaymentDay}
+                onChange={e => setMonthlyPaymentDay(e.target.value)}
+                disabled={!monthlyPayment}
+              />
+            </div>
           </div>
 
           <div>

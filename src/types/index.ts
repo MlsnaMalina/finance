@@ -15,6 +15,8 @@ export interface Debt {
   archived: boolean
   createdAt: string
   description?: string
+  monthlyPayment?: number
+  monthlyPaymentDay?: number
 }
 
 export type PaymentFrequency = 'monthly' | 'yearly'

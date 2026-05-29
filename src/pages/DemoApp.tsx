@@ -25,6 +25,8 @@ const SAMPLE_DEBTS: Debt[] = [
     archived: false,
     createdAt: '2024-10-01',
     description: 'Spotřebitelský úvěr',
+    monthlyPayment: 5000,
+    monthlyPaymentDay: 1,
   },
   {
     id: 'sample-2',
@@ -35,6 +37,8 @@ const SAMPLE_DEBTS: Debt[] = [
     payments: [{ id: 'p4', amount: 3000, date: '2025-01-15' }],
     archived: false,
     createdAt: '2024-12-01',
+    monthlyPayment: 1500,
+    monthlyPaymentDay: 15,
   },
 ]
 
@@ -121,7 +125,7 @@ export function DemoApp() {
       }
     >
       {tab === 'debts' && <DebtTab debts={debts} onDebtsChange={setDebts} />}
-      {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} balance={balance} reserve={reserve} onBalanceChange={setBalance} onReserveChange={setReserve} />}
+      {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} balance={balance} reserve={reserve} onBalanceChange={setBalance} onReserveChange={setReserve} debts={debts} />}
       {tab === 'savings' && <SavingsTab goals={goals} onGoalsChange={setGoals} />}
       <QuickAddFAB debts={debts} goals={goals} onDebtsChange={setDebts} onGoalsChange={setGoals} />
     </AppShell>
