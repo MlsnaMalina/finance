@@ -65,7 +65,7 @@ const SAMPLE_GOALS: SavingsGoal[] = [
   },
   {
     id: 'sg2',
-    name: 'Nový MacBook',
+    name: 'Nový laptop',
     targetAmount: 35000,
     savedAmount: 8750,
     color: SAVINGS_COLORS[1],
