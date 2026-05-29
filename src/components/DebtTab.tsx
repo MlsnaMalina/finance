@@ -39,6 +39,16 @@ export function DebtTab({ debts, onDebtsChange }: DebtTabProps) {
 
   return (
     <div style={{ padding: '0 0 40px' }}>
+      {/* Toolbar */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24 }}>
+        <button onClick={() => setShowAdd(true)} className="btn-primary" style={{ padding: '8px 16px', fontSize: 13 }}>
+          <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+            <path d="M8 3v10M3 8h10" />
+          </svg>
+          Přidat dluh
+        </button>
+      </div>
+
       {/* Summary bar */}
       {active.length > 0 && (
         <div style={{
@@ -155,28 +165,6 @@ export function DebtTab({ debts, onDebtsChange }: DebtTabProps) {
         </div>
       )}
 
-      {/* FAB */}
-      {active.length > 0 && (
-        <button
-          onClick={() => setShowAdd(true)}
-          className="btn-primary"
-          style={{
-            position: 'fixed',
-            bottom: 32,
-            right: 32,
-            borderRadius: 50,
-            padding: '14px 24px',
-            fontSize: 14,
-            boxShadow: '0 8px 32px rgba(167, 139, 250, 0.35)',
-            gap: 8,
-          }}
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-            <path d="M8 3v10M3 8h10" />
-          </svg>
-          Přidat dluh
-        </button>
-      )}
 
       {showAdd && <AddDebtModal onClose={() => setShowAdd(false)} onSave={d => { onDebtsChange([...debts, d]); setShowAdd(false) }} />}
     </div>
