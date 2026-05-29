@@ -39,6 +39,7 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve, deb
   const [month, setMonth] = useState(today.getMonth() + 1)
   const [editPayment, setEditPayment] = useState<RecurringPayment | null>(null)
   const [addForDay, setAddForDay] = useState<number | null>(null)
+  const [compactOverride, setCompactOverride] = useState<boolean | null>(null)
 
   const daysInMonth = new Date(year, month, 0).getDate()
   const firstDayOfWeek = (new Date(year, month - 1, 1).getDay() + 6) % 7 // Mon=0
@@ -101,6 +102,15 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve, deb
   const activeDebtsWithPayment = debts.filter(d => !d.archived && d.monthlyPayment && d.monthlyPayment > 0)
   const debtMonthlyTotal = activeDebtsWithPayment.reduce((s, d) => s + (d.monthlyPayment ?? 0), 0)
 
+  // Count total event slots in this month for compact mode decision
+  const totalMonthEvents = payments.filter(p => {
+    if (!p.active) return false
+    if (p.frequency === 'yearly' && p.monthOfYear !== month) return false
+    return true
+  }).length + activeDebtsWithPayment.length
+  const autoCompact = totalMonthEvents >= 8
+  const compact = compactOverride !== null ? compactOverride : autoCompact
+
   return (
     <div>
       {/* Month summary */}
@@ -143,7 +153,7 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve, deb
       )}
 
       {/* Calendar header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 8 }}>
         <button onClick={prevMonth} className="btn-ghost" style={{ padding: '8px 12px' }}>
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
             <path d="M10 4L6 8l4 4" />
@@ -159,6 +169,23 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve, deb
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
             <path d="M6 4l4 4-4 4" />
           </svg>
+        </button>
+        <button
+          onClick={() => setCompactOverride(compact ? false : true)}
+          className="btn-ghost"
+          title={compact ? 'Zobrazit detaily' : 'Kompaktní zobrazení'}
+          style={{ padding: '6px 10px', fontSize: 11, color: compact ? 'var(--violet)' : 'var(--text-tertiary)', borderColor: compact ? 'rgba(167,139,250,0.3)' : undefined }}
+        >
+          {compact ? (
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
+              <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
+            </svg>
+          ) : (
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+              <path d="M1 4h14M1 8h14M1 12h14"/>
+            </svg>
+          )}
         </button>
       </div>
 
@@ -208,14 +235,14 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve, deb
                 background: isToday ? 'var(--violet-dim)' : hasYearly ? 'rgba(251,191,36,0.04)' : 'var(--card)',
                 border: `1px solid ${isToday ? 'var(--violet)' : hasYearly ? 'rgba(251,191,36,0.3)' : 'var(--border)'}`,
                 borderRadius: 'var(--radius-md)',
-                padding: '10px 8px 8px',
+                padding: compact ? '8px 6px 6px' : '10px 8px 8px',
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'border-color 0.15s, background 0.15s',
-                minHeight: 88,
+                minHeight: compact ? 62 : 88,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: 4,
+                gap: compact ? 3 : 4,
                 opacity: isPast ? 0.55 : 1,
                 position: 'relative',
               }}
@@ -245,98 +272,115 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve, deb
 
               {/* Min balance */}
               {minBalance > 0 && (
-                <span style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 9,
-                  color: minBalanceColor,
-                  lineHeight: 1,
-                  letterSpacing: '-0.01em',
-                }}>
+                <span
+                  title="Zbývající platby od tohoto dne do konce měsíce"
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 9,
+                    color: minBalanceColor,
+                    lineHeight: 1,
+                    letterSpacing: '-0.01em',
+                    cursor: 'help',
+                    borderBottom: `1px dashed ${minBalanceColor}66`,
+                  }}>
                   {formatCurrency(minBalance)}
                 </span>
               )}
 
-              {/* Payment chips */}
+              {/* Payment chips / dots */}
               {(dayPayments.length > 0 || dayDebts.length > 0) && (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 'auto', flex: 1, justifyContent: 'flex-end' }}>
-                  {dayPayments.slice(0, 3).map(p => (
-                    <div
-                      key={p.id}
-                      onClick={e => { e.stopPropagation(); setEditPayment(p) }}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 4,
-                        padding: '2px 5px',
-                        borderRadius: 4,
-                        background: p.frequency === 'yearly' ? 'rgba(251,191,36,0.12)' : `${p.color}1A`,
-                        border: `1px solid ${p.frequency === 'yearly' ? 'rgba(251,191,36,0.35)' : `${p.color}33`}`,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {p.frequency === 'yearly' && (
-                        <span style={{ fontSize: 7, fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--amber)', letterSpacing: '0.04em', flexShrink: 0 }}>ROK</span>
-                      )}
-                      {p.frequency !== 'yearly' && (
-                        <div style={{ width: 5, height: 5, borderRadius: '50%', background: p.color, flexShrink: 0 }} />
-                      )}
-                      <span style={{
-                        fontSize: 9,
-                        color: p.frequency === 'yearly' ? 'var(--amber)' : p.color,
-                        fontFamily: 'var(--font-mono)',
-                        fontWeight: 500,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        maxWidth: '100%',
-                      }}>
-                        {formatCurrency(p.amount)}
+                compact ? (
+                  /* Compact: dot row */
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, marginTop: 'auto' }}>
+                    {dayPayments.map(p => (
+                      <div
+                        key={p.id}
+                        onClick={e => { e.stopPropagation(); setEditPayment(p) }}
+                        title={`${p.name} — ${formatCurrency(p.amount)}`}
+                        style={{
+                          width: p.frequency === 'yearly' ? 7 : 6,
+                          height: p.frequency === 'yearly' ? 7 : 6,
+                          borderRadius: p.frequency === 'yearly' ? 2 : '50%',
+                          background: p.frequency === 'yearly' ? 'var(--amber)' : p.color,
+                          cursor: 'pointer',
+                          flexShrink: 0,
+                        }}
+                      />
+                    ))}
+                    {dayDebts.map(d => (
+                      <div
+                        key={d.id}
+                        title={`${d.name} — splátka ${formatCurrency(d.monthlyPayment!)}`}
+                        style={{
+                          width: 6, height: 6,
+                          borderRadius: '50%',
+                          background: d.color,
+                          border: `1px dashed ${d.color}`,
+                          opacity: 0.7,
+                          flexShrink: 0,
+                        }}
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  /* Full: chip row */
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 3, marginTop: 'auto', flex: 1, justifyContent: 'flex-end' }}>
+                    {dayPayments.slice(0, 3).map(p => (
+                      <div
+                        key={p.id}
+                        onClick={e => { e.stopPropagation(); setEditPayment(p) }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          padding: '2px 5px',
+                          borderRadius: 4,
+                          background: p.frequency === 'yearly' ? 'rgba(251,191,36,0.12)' : `${p.color}1A`,
+                          border: `1px solid ${p.frequency === 'yearly' ? 'rgba(251,191,36,0.35)' : `${p.color}33`}`,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {p.frequency === 'yearly' ? (
+                          <span style={{ fontSize: 7, fontFamily: 'var(--font-display)', fontWeight: 700, color: 'var(--amber)', letterSpacing: '0.04em', flexShrink: 0 }}>ROK</span>
+                        ) : (
+                          <div style={{ width: 5, height: 5, borderRadius: '50%', background: p.color, flexShrink: 0 }} />
+                        )}
+                        <span style={{
+                          fontSize: 9, color: p.frequency === 'yearly' ? 'var(--amber)' : p.color,
+                          fontFamily: 'var(--font-mono)', fontWeight: 500,
+                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%',
+                        }}>
+                          {formatCurrency(p.amount)}
+                        </span>
+                      </div>
+                    ))}
+                    {dayDebts.slice(0, 2).map(d => (
+                      <div
+                        key={d.id}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 4,
+                          padding: '2px 5px', borderRadius: 4,
+                          background: `${d.color}18`, border: `1px dashed ${d.color}55`, cursor: 'default',
+                        }}
+                      >
+                        <svg width="6" height="6" viewBox="0 0 10 10" fill={d.color} style={{ flexShrink: 0 }}>
+                          <path d="M5 0C3.3 0 2 1.3 2 3c0 1 .5 1.9 1.2 2.5L5 10l1.8-4.5C7.5 4.9 8 4 8 3c0-1.7-1.3-3-3-3z" />
+                        </svg>
+                        <span style={{
+                          fontSize: 9, color: d.color, fontFamily: 'var(--font-mono)', fontWeight: 500,
+                          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', opacity: 0.85,
+                        }}>
+                          {formatCurrency(d.monthlyPayment!)}
+                        </span>
+                      </div>
+                    ))}
+                    {(dayPayments.length > 3 || dayDebts.length > 2) && (
+                      <span style={{ fontSize: 9, color: 'var(--text-tertiary)', paddingLeft: 5 }}>
+                        +{Math.max(0, dayPayments.length - 3) + Math.max(0, dayDebts.length - 2)}
                       </span>
-                    </div>
-                  ))}
-                  {dayDebts.slice(0, 2).map(d => (
-                    <div
-                      key={d.id}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 4,
-                        padding: '2px 5px',
-                        borderRadius: 4,
-                        background: `${d.color}18`,
-                        border: `1px dashed ${d.color}55`,
-                        cursor: 'default',
-                      }}
-                    >
-                      <svg width="6" height="6" viewBox="0 0 10 10" fill={d.color} style={{ flexShrink: 0 }}>
-                        <path d="M5 0C3.3 0 2 1.3 2 3c0 1 .5 1.9 1.2 2.5L5 10l1.8-4.5C7.5 4.9 8 4 8 3c0-1.7-1.3-3-3-3z" />
-                      </svg>
-                      <span style={{
-                        fontSize: 9,
-                        color: d.color,
-                        fontFamily: 'var(--font-mono)',
-                        fontWeight: 500,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        maxWidth: '100%',
-                        opacity: 0.85,
-                      }}>
-                        {formatCurrency(d.monthlyPayment!)}
-                      </span>
-                    </div>
-                  ))}
-                  {(dayPayments.length + dayDebts.length) > 5 && (
-                    <span style={{ fontSize: 9, color: 'var(--text-tertiary)', paddingLeft: 5 }}>
-                      +{dayPayments.length + dayDebts.length - 5}
-                    </span>
-                  )}
-                  {dayPayments.length > 3 && dayDebts.length === 0 && (
-                    <span style={{ fontSize: 9, color: 'var(--text-tertiary)', paddingLeft: 5 }}>
-                      +{dayPayments.length - 3}
-                    </span>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )
               )}
             </button>
           )

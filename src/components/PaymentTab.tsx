@@ -338,14 +338,15 @@ function BalanceWidget({
 
       <div style={{ width: 1, height: 14, background: 'rgba(167,139,250,0.25)', flexShrink: 0 }} />
 
-      <span style={{ fontSize: 11, color: 'var(--rose)', fontFamily: 'var(--font-display)', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0, letterSpacing: '0.03em' }}>
-        Rezerva
-      </span>
-      <InlineAmount value={reserve} onChange={onReserveChange} hint="Min. částka, kterou chci mít vždy k dispozici" />
+      <Tooltip text="Minimální zůstatek, pod který nechceš jít. Slouží jako polštář — výpočet zobrazí, kolik zbyde nad touto hranicí po zaplacení všech výdajů.">
+        <span style={{ fontSize: 11, color: 'var(--rose)', fontFamily: 'var(--font-display)', fontWeight: 700, whiteSpace: 'nowrap', flexShrink: 0, letterSpacing: '0.03em', cursor: 'help', borderBottom: '1px dashed rgba(244,114,182,0.4)' }}>
+          Rezerva
+        </span>
+      </Tooltip>
+      <InlineAmount value={reserve} onChange={onReserveChange} />
 
-      <div
-        title={statusTitle}
-        style={{
+      <Tooltip text={statusTitle}>
+        <div style={{
           width: 7,
           height: 7,
           borderRadius: '50%',
@@ -353,17 +354,16 @@ function BalanceWidget({
           flexShrink: 0,
           marginLeft: 4,
           boxShadow: balance !== null ? `0 0 6px ${statusColor}88` : 'none',
-          cursor: 'default',
-        }}
-      />
+          cursor: 'help',
+        }} />
+      </Tooltip>
     </div>
   )
 }
 
-function InlineAmount({ value, onChange, hint }: {
+function InlineAmount({ value, onChange }: {
   value: number | null
   onChange: (v: number | null) => void
-  hint?: string
 }) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState('')
@@ -409,7 +409,7 @@ function InlineAmount({ value, onChange, hint }: {
   return (
     <button
       onClick={() => setEditing(true)}
-      title={hint ?? 'Klikni pro úpravu'}
+      title="Klikni pro úpravu"
       style={{
         background: 'transparent',
         border: 'none',
@@ -446,6 +446,52 @@ function SummaryPill({ label, value, color, border, highlight }: {
     }}>
       <p style={{ fontSize: 10, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 500, marginBottom: 4 }}>{label}</p>
       <p style={{ fontFamily: 'var(--font-mono)', fontSize: 15, color, fontWeight: highlight ? 600 : 400, letterSpacing: '-0.02em' }}>{value}</p>
+    </div>
+  )
+}
+
+function Tooltip({ text, children }: { text: string; children: React.ReactNode }) {
+  const [visible, setVisible] = useState(false)
+  return (
+    <div
+      style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}
+      onMouseEnter={() => setVisible(true)}
+      onMouseLeave={() => setVisible(false)}
+    >
+      {children}
+      {visible && (
+        <div style={{
+          position: 'absolute',
+          bottom: 'calc(100% + 8px)',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'var(--bg-2)',
+          border: '1px solid var(--border-active)',
+          borderRadius: 8,
+          padding: '8px 12px',
+          fontSize: 12,
+          color: 'var(--text-secondary)',
+          whiteSpace: 'normal' as never,
+          maxWidth: 280,
+          lineHeight: 1.5,
+          zIndex: 200,
+          boxShadow: 'var(--shadow-card)',
+          pointerEvents: 'none',
+        }}>
+          {text}
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            width: 0,
+            height: 0,
+            borderLeft: '5px solid transparent',
+            borderRight: '5px solid transparent',
+            borderTop: '5px solid var(--border-active)',
+          }} />
+        </div>
+      )}
     </div>
   )
 }

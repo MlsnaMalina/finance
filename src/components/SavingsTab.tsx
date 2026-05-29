@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { SavingsGoal } from '../types'
 import { SavingsCard } from './SavingsCard'
 import { AddSavingsGoalModal } from './AddSavingsGoalModal'
-import { formatCurrency } from '../utils/formatters'
+import { formatCurrency, formatDate } from '../utils/formatters'
 
 interface SavingsTabProps {
   goals: SavingsGoal[]
@@ -121,53 +121,15 @@ export function SavingsTab({ goals, onGoalsChange }: SavingsTabProps) {
         </div>
       )}
 
-      {/* Archived */}
+      {/* Wins timeline */}
       {archived.length > 0 && (
-        <div style={{ marginTop: 40 }}>
-          <button
-            onClick={() => setShowArchived(s => !s)}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 8,
-              color: 'var(--text-secondary)', fontSize: 13,
-              fontFamily: 'var(--font-display)', fontWeight: 600,
-              marginBottom: 16, letterSpacing: '0.02em',
-            }}
-          >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
-              style={{ transform: showArchived ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>
-              <path d="M6 4l4 4-4 4" />
-            </svg>
-            Archiv ({archived.length})
-          </button>
-          {showArchived && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 12, opacity: 0.6 }}>
-              {archived.map(g => (
-                <div key={g.id} style={{
-                  background: 'var(--card)', border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius-md)', padding: '16px 18px',
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <div>
-                      <p style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600 }}>{g.name}</p>
-                      <p style={{ fontSize: 12, color: 'var(--text-secondary)', fontFamily: 'var(--font-mono)' }}>
-                        {formatCurrency(g.savedAmount)} / {formatCurrency(g.targetAmount)}
-                      </p>
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 6 }}>
-                    <button onClick={() => handleUnarchive(g.id)} className="btn-ghost" style={{ padding: '6px 10px', fontSize: 12 }}>
-                      Obnovit
-                    </button>
-                    <button onClick={() => handleDelete(g.id)} className="btn-ghost" style={{ padding: '6px 10px', fontSize: 12, color: 'var(--red)' }}>
-                      ✕
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        <SavingsWinsTimeline
+          archived={archived}
+          showArchived={showArchived}
+          onToggle={() => setShowArchived(s => !s)}
+          onUnarchive={handleUnarchive}
+          onDelete={handleDelete}
+        />
       )}
 
 
@@ -176,6 +138,137 @@ export function SavingsTab({ goals, onGoalsChange }: SavingsTabProps) {
           onClose={() => setShowAdd(false)}
           onSave={g => { onGoalsChange([...goals, g]); setShowAdd(false) }}
         />
+      )}
+    </div>
+  )
+}
+
+function SavingsWinsTimeline({ archived, showArchived, onToggle, onUnarchive, onDelete }: {
+  archived: SavingsGoal[]
+  showArchived: boolean
+  onToggle: () => void
+  onUnarchive: (id: string) => void
+  onDelete: (id: string) => void
+}) {
+  const sorted = [...archived].sort((a, b) => {
+    const aDate = a.deposits.length > 0 ? a.deposits[a.deposits.length - 1].date : a.createdAt
+    const bDate = b.deposits.length > 0 ? b.deposits[b.deposits.length - 1].date : b.createdAt
+    return bDate.localeCompare(aDate)
+  })
+
+  const totalSaved = archived.reduce((s, g) => s + g.savedAmount, 0)
+
+  return (
+    <div style={{ marginTop: 48 }}>
+      <button
+        onClick={onToggle}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 10,
+          color: 'var(--text-secondary)', fontSize: 13,
+          fontFamily: 'var(--font-display)', fontWeight: 600,
+          marginBottom: showArchived ? 24 : 0, letterSpacing: '0.02em',
+        }}
+      >
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"
+          style={{ transform: showArchived ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>
+          <path d="M6 4l4 4-4 4" />
+        </svg>
+        Dosažené cíle
+        <span style={{
+          fontSize: 11, fontFamily: 'var(--font-mono)',
+          background: 'rgba(167,139,250,0.12)', color: 'var(--violet)',
+          border: '1px solid rgba(167,139,250,0.2)',
+          borderRadius: 20, padding: '1px 8px',
+        }}>
+          {archived.length} · {formatCurrency(totalSaved)}
+        </span>
+      </button>
+
+      {showArchived && (
+        <div style={{ position: 'relative', paddingLeft: 28 }}>
+          <div style={{
+            position: 'absolute', left: 7, top: 8, bottom: 8,
+            width: 2, background: 'linear-gradient(to bottom, var(--violet), rgba(167,139,250,0.1))',
+            borderRadius: 1,
+          }} />
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {sorted.map((g, i) => {
+              const lastDeposit = g.deposits.length > 0 ? g.deposits[g.deposits.length - 1] : null
+              const lastDate = lastDeposit?.date ?? g.createdAt.split('T')[0]
+              const monthsDiff = (() => {
+                const start = new Date(g.createdAt.split('T')[0])
+                const end = new Date(lastDate)
+                return (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth())
+              })()
+              const completed = g.savedAmount >= g.targetAmount
+
+              return (
+                <div key={g.id} style={{ position: 'relative', display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+                  <div style={{
+                    position: 'absolute', left: -24, top: 14,
+                    width: 14, height: 14, borderRadius: '50%',
+                    background: i === 0 ? 'var(--violet)' : 'var(--card)',
+                    border: `2px solid ${i === 0 ? 'var(--violet)' : g.color}`,
+                    boxShadow: i === 0 ? '0 0 10px rgba(167,139,250,0.4)' : 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                    fontSize: 8,
+                  }}>
+                    {i === 0 && <span style={{ lineHeight: 1 }}>★</span>}
+                  </div>
+
+                  <div style={{
+                    flex: 1,
+                    background: i === 0 ? 'rgba(167,139,250,0.05)' : 'var(--card)',
+                    border: `1px solid ${i === 0 ? 'rgba(167,139,250,0.2)' : 'var(--border)'}`,
+                    borderRadius: 'var(--radius-md)',
+                    padding: '14px 16px',
+                    display: 'flex', alignItems: 'center', gap: 12,
+                  }}>
+                    <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>{g.emoji}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+                        <p style={{ fontFamily: 'var(--font-display)', fontSize: 14, fontWeight: 600, color: 'var(--text-primary)' }}>
+                          {g.name}
+                        </p>
+                        {completed && (
+                          <span style={{ fontSize: 10, color: 'var(--emerald)', fontFamily: 'var(--font-display)', fontWeight: 700, letterSpacing: '0.04em' }}>
+                            SPLNĚNO
+                          </span>
+                        )}
+                      </div>
+                      <div style={{ display: 'flex', gap: 12, marginTop: 4, flexWrap: 'wrap' }}>
+                        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: g.color, letterSpacing: '-0.02em' }}>
+                          {formatCurrency(g.savedAmount)}
+                          {!completed && <span style={{ color: 'var(--text-tertiary)', fontSize: 11 }}> / {formatCurrency(g.targetAmount)}</span>}
+                        </span>
+                        {lastDeposit && (
+                          <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
+                            {formatDate(lastDate)}
+                          </span>
+                        )}
+                        {monthsDiff > 0 && (
+                          <span style={{ fontSize: 12, color: 'var(--text-tertiary)' }}>
+                            · {monthsDiff} {monthsDiff === 1 ? 'měsíc' : monthsDiff < 5 ? 'měsíce' : 'měsíců'}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+                      <button onClick={() => onUnarchive(g.id)} className="btn-ghost" style={{ padding: '5px 10px', fontSize: 11 }}>
+                        Obnovit
+                      </button>
+                      <button onClick={() => onDelete(g.id)} className="btn-ghost" style={{ padding: '5px 8px', fontSize: 11, color: 'var(--red)' }}>
+                        ✕
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
       )}
     </div>
   )
