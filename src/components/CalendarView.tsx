@@ -39,7 +39,6 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve, deb
   const [month, setMonth] = useState(today.getMonth() + 1)
   const [editPayment, setEditPayment] = useState<RecurringPayment | null>(null)
   const [addForDay, setAddForDay] = useState<number | null>(null)
-  const [compactOverride, setCompactOverride] = useState<boolean | null>(null)
 
   const daysInMonth = new Date(year, month, 0).getDate()
   const firstDayOfWeek = (new Date(year, month - 1, 1).getDay() + 6) % 7 // Mon=0
@@ -54,15 +53,6 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve, deb
   }
 
   const isCurrentMonth = year === today.getFullYear() && month === today.getMonth() + 1
-
-  // Total for this month
-  const monthTotal = payments.filter(p => p.active).reduce((s, p) => {
-    if (p.frequency === 'yearly' && p.monthOfYear !== month) return s
-    return s + p.amount
-  }, 0)
-
-  // Monthly total (only recurring monthly)
-  const monthlyTotal = payments.filter(p => p.active && p.frequency === 'monthly').reduce((s, p) => s + p.amount, 0)
 
   // Countdown to nearest upcoming yearly payment
   const nextYearly = (() => {
@@ -100,7 +90,6 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve, deb
   while (cells.length % 7 !== 0) cells.push(null)
 
   const activeDebtsWithPayment = debts.filter(d => !d.archived && d.monthlyPayment && d.monthlyPayment > 0)
-  const debtMonthlyTotal = activeDebtsWithPayment.reduce((s, d) => s + (d.monthlyPayment ?? 0), 0)
 
   // Count total event slots in this month for compact mode decision
   const totalMonthEvents = payments.filter(p => {
@@ -108,29 +97,14 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve, deb
     if (p.frequency === 'yearly' && p.monthOfYear !== month) return false
     return true
   }).length + activeDebtsWithPayment.length
-  const autoCompact = totalMonthEvents >= 8
-  const compact = compactOverride !== null ? compactOverride : autoCompact
+  const compact = totalMonthEvents >= 8
 
   return (
     <div>
-      {/* Month summary */}
-      {(monthTotal > 0 || debtMonthlyTotal > 0) && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 12,
-          marginBottom: nextYearly ? 12 : 28,
-        }}>
-          <SummaryCard label="Celkem tento měsíc" value={formatCurrency(monthTotal)} color="var(--violet)" />
-          <SummaryCard label="Měsíční platby" value={formatCurrency(monthlyTotal)} color="var(--sky)" />
-          <SummaryCard label="Jednorázové (letos)" value={formatCurrency(monthTotal - monthlyTotal)} color="var(--amber)" />
-        </div>
-      )}
-
       {/* Countdown to nearest yearly payment */}
       {nextYearly && (
         <div style={{
-          marginBottom: 20,
+          marginBottom: 24,
           padding: '10px 16px',
           background: 'rgba(251,191,36,0.07)',
           border: '1px solid rgba(251,191,36,0.2)',
@@ -169,23 +143,6 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve, deb
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
             <path d="M6 4l4 4-4 4" />
           </svg>
-        </button>
-        <button
-          onClick={() => setCompactOverride(compact ? false : true)}
-          className="btn-ghost"
-          title={compact ? 'Zobrazit detaily' : 'Kompaktní zobrazení'}
-          style={{ padding: '6px 10px', fontSize: 11, color: compact ? 'var(--violet)' : 'var(--text-tertiary)', borderColor: compact ? 'rgba(167,139,250,0.3)' : undefined }}
-        >
-          {compact ? (
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/>
-              <rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/>
-            </svg>
-          ) : (
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-              <path d="M1 4h14M1 8h14M1 12h14"/>
-            </svg>
-          )}
         </button>
       </div>
 
@@ -409,16 +366,3 @@ export function CalendarView({ payments, onPaymentsChange, balance, reserve, deb
   )
 }
 
-function SummaryCard({ label, value, color }: { label: string; value: string; color: string }) {
-  return (
-    <div style={{
-      background: 'var(--card)',
-      border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-md)',
-      padding: '16px 18px',
-    }}>
-      <p style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 500 }}>{label}</p>
-      <p style={{ fontFamily: 'var(--font-mono)', fontSize: 16, color, letterSpacing: '-0.02em', fontWeight: 500 }}>{value}</p>
-    </div>
-  )
-}

@@ -39,48 +39,8 @@ export function PaymentTab({ payments, onPaymentsChange, balance, reserve, onBal
   const monthly = payments.filter(p => p.active && p.frequency === 'monthly')
   const yearly = payments.filter(p => p.active && p.frequency === 'yearly')
 
-  const monthlyRecurringTotal = monthly.reduce((s, p) => s + p.amount, 0)
-  const activeDebtsWithPayment = debts.filter(d => !d.archived && d.monthlyPayment && d.monthlyPayment > 0)
-  const debtMonthlyTotal = activeDebtsWithPayment.reduce((s, d) => s + (d.monthlyPayment ?? 0), 0)
-  const grandMonthlyTotal = monthlyRecurringTotal + debtMonthlyTotal
-
   return (
     <div style={{ paddingBottom: 40 }}>
-      {/* Monthly total summary */}
-      {grandMonthlyTotal > 0 && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 0,
-          marginBottom: 20,
-          background: 'var(--card)',
-          border: '1px solid var(--border)',
-          borderRadius: 'var(--radius-md)',
-          overflow: 'hidden',
-        }}>
-          <SummaryPill
-            label="Pravidelné platby"
-            value={formatCurrency(monthlyRecurringTotal)}
-            color="var(--sky)"
-            border
-          />
-          {debtMonthlyTotal > 0 && (
-            <SummaryPill
-              label="Splátky dluhů"
-              value={formatCurrency(debtMonthlyTotal)}
-              color="var(--violet)"
-              border
-            />
-          )}
-          <SummaryPill
-            label="Celkem / měsíc"
-            value={formatCurrency(grandMonthlyTotal)}
-            color="var(--text-primary)"
-            highlight
-          />
-        </div>
-      )}
-
       {/* Toolbar */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <div style={{
@@ -430,25 +390,6 @@ function InlineAmount({ value, onChange }: {
   )
 }
 
-function SummaryPill({ label, value, color, border, highlight }: {
-  label: string
-  value: string
-  color: string
-  border?: boolean
-  highlight?: boolean
-}) {
-  return (
-    <div style={{
-      flex: 1,
-      padding: '12px 16px',
-      borderRight: border ? '1px solid var(--border)' : 'none',
-      background: highlight ? 'rgba(167,139,250,0.05)' : 'transparent',
-    }}>
-      <p style={{ fontSize: 10, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 500, marginBottom: 4 }}>{label}</p>
-      <p style={{ fontFamily: 'var(--font-mono)', fontSize: 15, color, fontWeight: highlight ? 600 : 400, letterSpacing: '-0.02em' }}>{value}</p>
-    </div>
-  )
-}
 
 function Tooltip({ text, children }: { text: string; children: React.ReactNode }) {
   const [visible, setVisible] = useState(false)
