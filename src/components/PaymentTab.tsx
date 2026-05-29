@@ -40,10 +40,8 @@ export function PaymentTab({ payments, onPaymentsChange, balance, reserve, onBal
 
   return (
     <div style={{ paddingBottom: 40 }}>
-      <BalanceWidget payments={payments} balance={balance} reserve={reserve} onBalanceChange={onBalanceChange} onReserveChange={onReserveChange} />
-
       {/* Toolbar */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
         <div style={{
           display: 'flex',
           background: 'var(--card)',
@@ -51,6 +49,7 @@ export function PaymentTab({ payments, onPaymentsChange, balance, reserve, onBal
           borderRadius: 'var(--radius-sm)',
           padding: 3,
           gap: 2,
+          flexShrink: 0,
         }}>
           {(['calendar', 'list'] as const).map(v => (
             <button
@@ -73,7 +72,9 @@ export function PaymentTab({ payments, onPaymentsChange, balance, reserve, onBal
           ))}
         </div>
 
-        <button onClick={() => setShowAdd(true)} className="btn-primary" style={{ padding: '8px 16px', fontSize: 13 }}>
+        <BalanceWidget payments={payments} balance={balance} reserve={reserve} onBalanceChange={onBalanceChange} onReserveChange={onReserveChange} />
+
+        <button onClick={() => setShowAdd(true)} className="btn-primary" style={{ padding: '8px 16px', fontSize: 13, flexShrink: 0 }}>
           <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
             <path d="M8 3v10M3 8h10" />
           </svg>
@@ -272,55 +273,55 @@ function BalanceWidget({
     }
   }
 
+  const statusTitle = balance === null
+    ? 'Zadej aktuální zůstatek pro přehled'
+    : statusText
+
   return (
     <div style={{
+      flex: 1,
+      display: 'flex',
+      alignItems: 'center',
+      gap: 8,
       background: 'var(--card)',
       border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-md)',
-      padding: '16px 20px',
-      marginBottom: 28,
-      display: 'flex',
-      flexDirection: 'column',
-      gap: 14,
+      borderRadius: 'var(--radius-sm)',
+      padding: '0 12px',
+      height: 36,
+      minWidth: 0,
     }}>
-      <div style={{ display: 'flex', gap: 16 }}>
-        <AmountField
-          label="Aktuální zůstatek"
-          value={balance}
-          onChange={onBalanceChange}
-          placeholder="— Kč"
-        />
-        <div style={{ width: 1, background: 'var(--border)', flexShrink: 0 }} />
-        <AmountField
-          label="Rezerva"
-          value={reserve}
-          onChange={onReserveChange}
-          placeholder="— Kč"
-          hint="Min. částka, kterou chci mít vždy k dispozici"
-        />
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor, flexShrink: 0 }} />
-        <span style={{ fontSize: 13, color: statusColor, fontFamily: 'var(--font-body)' }}>
-          {statusText}
-        </span>
-        {balance !== null && remainingThisMonth > 0 && (
-          <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 'auto', fontFamily: 'var(--font-mono)' }}>
-            výdaje do konce měsíce: {formatCurrency(remainingThisMonth)}
-          </span>
-        )}
-      </div>
+      <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-display)', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
+        Zůstatek
+      </span>
+      <InlineAmount value={balance} onChange={onBalanceChange} />
+
+      <div style={{ width: 1, height: 14, background: 'var(--border)', flexShrink: 0 }} />
+
+      <span style={{ fontSize: 11, color: 'var(--text-tertiary)', fontFamily: 'var(--font-display)', fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0 }}>
+        Rezerva
+      </span>
+      <InlineAmount value={reserve} onChange={onReserveChange} hint="Min. částka, kterou chci mít vždy k dispozici" />
+
+      <div
+        title={statusTitle}
+        style={{
+          width: 7,
+          height: 7,
+          borderRadius: '50%',
+          background: statusColor,
+          flexShrink: 0,
+          marginLeft: 4,
+          boxShadow: balance !== null ? `0 0 6px ${statusColor}88` : 'none',
+          cursor: 'default',
+        }}
+      />
     </div>
   )
 }
 
-function AmountField({
-  label, value, onChange, placeholder, hint,
-}: {
-  label: string
+function InlineAmount({ value, onChange, hint }: {
   value: number | null
   onChange: (v: number | null) => void
-  placeholder: string
   hint?: string
 }) {
   const [editing, setEditing] = useState(false)
@@ -340,59 +341,51 @@ function AmountField({
     setEditing(false)
   }
 
+  if (editing) {
+    return (
+      <input
+        ref={inputRef}
+        value={draft}
+        onChange={e => setDraft(e.target.value)}
+        onBlur={commit}
+        onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false) }}
+        style={{
+          background: 'transparent',
+          border: 'none',
+          borderBottom: '1px solid var(--violet)',
+          padding: '0 2px',
+          fontFamily: 'var(--font-mono)',
+          fontSize: 13,
+          color: 'var(--text-primary)',
+          width: 90,
+          outline: 'none',
+        }}
+        placeholder="0"
+      />
+    )
+  }
+
   return (
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <p style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 500 }}>
-        {label}
-      </p>
-      {editing ? (
-        <input
-          ref={inputRef}
-          value={draft}
-          onChange={e => setDraft(e.target.value)}
-          onBlur={commit}
-          onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false) }}
-          style={{
-            background: 'var(--bg-2)',
-            border: '1px solid var(--violet)',
-            borderRadius: 8,
-            padding: '6px 10px',
-            fontFamily: 'var(--font-mono)',
-            fontSize: 18,
-            color: 'var(--text-primary)',
-            width: '100%',
-            outline: 'none',
-          }}
-          placeholder="0"
-        />
-      ) : (
-        <button
-          onClick={() => setEditing(true)}
-          title={hint}
-          style={{
-            background: 'transparent',
-            border: '1px solid transparent',
-            borderRadius: 8,
-            padding: '6px 0',
-            cursor: 'text',
-            textAlign: 'left',
-            width: '100%',
-            transition: 'border-color 0.15s',
-          }}
-          onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border-active)')}
-          onMouseLeave={e => (e.currentTarget.style.borderColor = 'transparent')}
-        >
-          <span style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 18,
-            color: value !== null ? 'var(--text-primary)' : 'var(--text-tertiary)',
-            letterSpacing: '-0.02em',
-          }}>
-            {value !== null ? formatCurrency(value) : placeholder}
-          </span>
-        </button>
-      )}
-    </div>
+    <button
+      onClick={() => setEditing(true)}
+      title={hint ?? 'Klikni pro úpravu'}
+      style={{
+        background: 'transparent',
+        border: 'none',
+        padding: '0 2px',
+        cursor: 'text',
+        fontFamily: 'var(--font-mono)',
+        fontSize: 13,
+        color: value !== null ? 'var(--text-primary)' : 'var(--text-tertiary)',
+        letterSpacing: '-0.01em',
+        borderBottom: '1px solid transparent',
+        transition: 'border-color 0.15s',
+      }}
+      onMouseEnter={e => (e.currentTarget.style.borderBottomColor = 'var(--border-active)')}
+      onMouseLeave={e => (e.currentTarget.style.borderBottomColor = 'transparent')}
+    >
+      {value !== null ? formatCurrency(value) : '— Kč'}
+    </button>
   )
 }
 
