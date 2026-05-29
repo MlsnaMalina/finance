@@ -101,6 +101,8 @@ export function DemoApp() {
   const [debts, setDebts] = useLocalStorage<Debt[]>('demo-finance-debts-v2', SAMPLE_DEBTS)
   const [payments, setPayments] = useLocalStorage<RecurringPayment[]>('demo-finance-payments-v2', SAMPLE_PAYMENTS)
   const [goals, setGoals] = useLocalStorage<SavingsGoal[]>('demo-finance-goals-v2', SAMPLE_GOALS)
+  const [balance, setBalance] = useLocalStorage<number | null>('demo-finance-balance', null)
+  const [reserve, setReserve] = useLocalStorage<number | null>('demo-finance-reserve', null)
 
   return (
     <AppShell
@@ -112,7 +114,7 @@ export function DemoApp() {
       headerExtra={<DemoBadge onLogin={() => navigate('/')} />}
     >
       {tab === 'debts' && <DebtTab debts={debts} onDebtsChange={setDebts} />}
-      {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} />}
+      {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} balance={balance} reserve={reserve} onBalanceChange={setBalance} onReserveChange={setReserve} />}
       {tab === 'savings' && <SavingsTab goals={goals} onGoalsChange={setGoals} />}
     </AppShell>
   )

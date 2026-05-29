@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import type { RecurringPayment } from '../types'
 import { CalendarView } from './CalendarView'
 import { PaymentModal } from './PaymentModal'
@@ -7,9 +7,13 @@ import { formatCurrency, MONTH_NAMES } from '../utils/formatters'
 interface PaymentTabProps {
   payments: RecurringPayment[]
   onPaymentsChange: (payments: RecurringPayment[]) => void
+  balance: number | null
+  reserve: number | null
+  onBalanceChange: (v: number | null) => void
+  onReserveChange: (v: number | null) => void
 }
 
-export function PaymentTab({ payments, onPaymentsChange }: PaymentTabProps) {
+export function PaymentTab({ payments, onPaymentsChange, balance, reserve, onBalanceChange, onReserveChange }: PaymentTabProps) {
   const [showAdd, setShowAdd] = useState(false)
   const [editPayment, setEditPayment] = useState<RecurringPayment | null>(null)
   const [view, setView] = useState<'calendar' | 'list'>('calendar')
@@ -36,6 +40,8 @@ export function PaymentTab({ payments, onPaymentsChange }: PaymentTabProps) {
 
   return (
     <div style={{ paddingBottom: 40 }}>
+      <BalanceWidget payments={payments} balance={balance} reserve={reserve} onBalanceChange={onBalanceChange} onReserveChange={onReserveChange} />
+
       {/* Toolbar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div style={{
@@ -79,7 +85,7 @@ export function PaymentTab({ payments, onPaymentsChange }: PaymentTabProps) {
         payments.length === 0 ? (
           <EmptyState onAdd={() => setShowAdd(true)} />
         ) : (
-          <CalendarView payments={payments} onPaymentsChange={onPaymentsChange} />
+          <CalendarView payments={payments} onPaymentsChange={onPaymentsChange} balance={balance} reserve={reserve} />
         )
       ) : (
         /* List view */
@@ -216,6 +222,176 @@ function PaymentRow({ payment, onEdit, onToggle }: { payment: RecurringPayment; 
           <path d="M11 2l3 3-8 8H3v-3l8-8z" />
         </svg>
       </button>
+    </div>
+  )
+}
+
+function BalanceWidget({
+  payments, balance, reserve, onBalanceChange, onReserveChange,
+}: {
+  payments: RecurringPayment[]
+  balance: number | null
+  reserve: number | null
+  onBalanceChange: (v: number | null) => void
+  onReserveChange: (v: number | null) => void
+}) {
+  const today = new Date()
+  const currentMonth = today.getMonth() + 1
+  const currentDay = today.getDate()
+  const daysInCurrentMonth = new Date(today.getFullYear(), currentMonth, 0).getDate()
+
+  let remainingThisMonth = 0
+  for (let d = currentDay; d <= daysInCurrentMonth; d++) {
+    for (const p of payments) {
+      if (!p.active) continue
+      if (p.dayOfMonth !== d) continue
+      if (p.frequency === 'yearly' && p.monthOfYear !== currentMonth) continue
+      remainingThisMonth += p.amount
+    }
+  }
+
+  const afterPayments = balance !== null ? balance - remainingThisMonth : null
+  const cushion = afterPayments !== null && reserve !== null ? afterPayments - reserve : null
+
+  let statusColor = 'var(--text-tertiary)'
+  let statusText = 'Zadej aktuální zůstatek pro přehled'
+  if (balance !== null) {
+    if (cushion !== null) {
+      if (cushion >= 0) {
+        statusColor = 'var(--emerald)'
+        statusText = `Po výdajích zbyde ${formatCurrency(cushion)} nad rezervou`
+      } else {
+        statusColor = 'var(--rose)'
+        statusText = `Do rezervy chybí ${formatCurrency(Math.abs(cushion))}`
+      }
+    } else {
+      statusColor = afterPayments! >= 0 ? 'var(--emerald)' : 'var(--rose)'
+      statusText = afterPayments! >= 0
+        ? `Po výdajích zbyde ${formatCurrency(afterPayments!)}`
+        : `Na výdaje chybí ${formatCurrency(Math.abs(afterPayments!))}`
+    }
+  }
+
+  return (
+    <div style={{
+      background: 'var(--card)',
+      border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-md)',
+      padding: '16px 20px',
+      marginBottom: 28,
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 14,
+    }}>
+      <div style={{ display: 'flex', gap: 16 }}>
+        <AmountField
+          label="Aktuální zůstatek"
+          value={balance}
+          onChange={onBalanceChange}
+          placeholder="— Kč"
+        />
+        <div style={{ width: 1, background: 'var(--border)', flexShrink: 0 }} />
+        <AmountField
+          label="Rezerva"
+          value={reserve}
+          onChange={onReserveChange}
+          placeholder="— Kč"
+          hint="Min. částka, kterou chci mít vždy k dispozici"
+        />
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+        <div style={{ width: 6, height: 6, borderRadius: '50%', background: statusColor, flexShrink: 0 }} />
+        <span style={{ fontSize: 13, color: statusColor, fontFamily: 'var(--font-body)' }}>
+          {statusText}
+        </span>
+        {balance !== null && remainingThisMonth > 0 && (
+          <span style={{ fontSize: 11, color: 'var(--text-tertiary)', marginLeft: 'auto', fontFamily: 'var(--font-mono)' }}>
+            výdaje do konce měsíce: {formatCurrency(remainingThisMonth)}
+          </span>
+        )}
+      </div>
+    </div>
+  )
+}
+
+function AmountField({
+  label, value, onChange, placeholder, hint,
+}: {
+  label: string
+  value: number | null
+  onChange: (v: number | null) => void
+  placeholder: string
+  hint?: string
+}) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    if (editing) {
+      setDraft(value !== null ? String(value) : '')
+      requestAnimationFrame(() => inputRef.current?.select())
+    }
+  }, [editing, value])
+
+  function commit() {
+    const num = parseFloat(draft.replace(/\s/g, '').replace(',', '.'))
+    onChange(isNaN(num) ? null : Math.max(0, num))
+    setEditing(false)
+  }
+
+  return (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <p style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 500 }}>
+        {label}
+      </p>
+      {editing ? (
+        <input
+          ref={inputRef}
+          value={draft}
+          onChange={e => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={e => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setEditing(false) }}
+          style={{
+            background: 'var(--bg-2)',
+            border: '1px solid var(--violet)',
+            borderRadius: 8,
+            padding: '6px 10px',
+            fontFamily: 'var(--font-mono)',
+            fontSize: 18,
+            color: 'var(--text-primary)',
+            width: '100%',
+            outline: 'none',
+          }}
+          placeholder="0"
+        />
+      ) : (
+        <button
+          onClick={() => setEditing(true)}
+          title={hint}
+          style={{
+            background: 'transparent',
+            border: '1px solid transparent',
+            borderRadius: 8,
+            padding: '6px 0',
+            cursor: 'text',
+            textAlign: 'left',
+            width: '100%',
+            transition: 'border-color 0.15s',
+          }}
+          onMouseEnter={e => (e.currentTarget.style.borderColor = 'var(--border-active)')}
+          onMouseLeave={e => (e.currentTarget.style.borderColor = 'transparent')}
+        >
+          <span style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 18,
+            color: value !== null ? 'var(--text-primary)' : 'var(--text-tertiary)',
+            letterSpacing: '-0.02em',
+          }}>
+            {value !== null ? formatCurrency(value) : placeholder}
+          </span>
+        </button>
+      )}
     </div>
   )
 }

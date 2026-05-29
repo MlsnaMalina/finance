@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { useSupabaseData } from '../hooks/useSupabaseData'
+import { useLocalStorage } from '../hooks/useLocalStorage'
 import type { TabId } from '../types'
 import { DebtTab } from '../components/DebtTab'
 import { PaymentTab } from '../components/PaymentTab'
@@ -11,6 +12,8 @@ export function PrivateApp() {
   const { user, signOut } = useAuth()
   const [tab, setTab] = useState<TabId>('debts')
   const { debts, setDebts, payments, setPayments, goals, setGoals, loading } = useSupabaseData(user!.id)
+  const [balance, setBalance] = useLocalStorage<number | null>(`finance-balance-${user!.id}`, null)
+  const [reserve, setReserve] = useLocalStorage<number | null>(`finance-reserve-${user!.id}`, null)
 
   if (loading) {
     return <LoadingScreen />
@@ -26,7 +29,7 @@ export function PrivateApp() {
       headerExtra={<SignOutButton onSignOut={signOut} />}
     >
       {tab === 'debts' && <DebtTab debts={debts} onDebtsChange={setDebts} />}
-      {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} />}
+      {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} balance={balance} reserve={reserve} onBalanceChange={setBalance} onReserveChange={setReserve} />}
       {tab === 'savings' && <SavingsTab goals={goals} onGoalsChange={setGoals} />}
     </AppShell>
   )

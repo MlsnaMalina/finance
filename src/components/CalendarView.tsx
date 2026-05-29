@@ -6,6 +6,8 @@ import { PaymentModal } from './PaymentModal'
 interface CalendarViewProps {
   payments: RecurringPayment[]
   onPaymentsChange: (payments: RecurringPayment[]) => void
+  balance?: number | null
+  reserve?: number | null
 }
 
 function getPaymentsForDay(payments: RecurringPayment[], day: number, month: number): RecurringPayment[] {
@@ -30,7 +32,7 @@ function getMinBalanceForDay(payments: RecurringPayment[], day: number, month: n
   return total
 }
 
-export function CalendarView({ payments, onPaymentsChange }: CalendarViewProps) {
+export function CalendarView({ payments, onPaymentsChange, balance, reserve }: CalendarViewProps) {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth() + 1)
@@ -144,6 +146,14 @@ export function CalendarView({ payments, onPaymentsChange }: CalendarViewProps) 
           const isToday = isCurrentMonth && day === today.getDate()
           const isPast = isCurrentMonth && day < today.getDate()
 
+          let minBalanceColor = 'var(--text-tertiary)'
+          if (balance != null && minBalance > 0) {
+            const threshold = reserve ?? 0
+            if (balance >= minBalance + threshold) minBalanceColor = 'var(--emerald)'
+            else if (balance >= minBalance) minBalanceColor = 'var(--amber)'
+            else minBalanceColor = 'var(--rose)'
+          }
+
           return (
             <button
               key={day}
@@ -192,7 +202,7 @@ export function CalendarView({ payments, onPaymentsChange }: CalendarViewProps) 
                 <span style={{
                   fontFamily: 'var(--font-mono)',
                   fontSize: 9,
-                  color: 'var(--text-tertiary)',
+                  color: minBalanceColor,
                   lineHeight: 1,
                   letterSpacing: '-0.01em',
                 }}>
