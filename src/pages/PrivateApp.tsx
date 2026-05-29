@@ -7,6 +7,7 @@ import { DebtTab } from '../components/DebtTab'
 import { PaymentTab } from '../components/PaymentTab'
 import { SavingsTab } from '../components/SavingsTab'
 import { AppShell } from './AppShell'
+import { BackupMenu } from '../components/BackupMenu'
 
 export function PrivateApp() {
   const { user, signOut } = useAuth()
@@ -26,7 +27,12 @@ export function PrivateApp() {
       debts={debts}
       payments={payments}
       goals={goals}
-      headerExtra={<SignOutButton onSignOut={signOut} />}
+      headerExtra={
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <BackupMenu debts={debts} payments={payments} goals={goals} onDebtsChange={setDebts} onPaymentsChange={setPayments} onGoalsChange={setGoals} />
+          <SignOutButton onSignOut={signOut} />
+        </div>
+      }
     >
       {tab === 'debts' && <DebtTab debts={debts} onDebtsChange={setDebts} />}
       {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} balance={balance} reserve={reserve} onBalanceChange={setBalance} onReserveChange={setReserve} />}

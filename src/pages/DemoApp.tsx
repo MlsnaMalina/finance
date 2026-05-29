@@ -7,6 +7,7 @@ import { PaymentTab } from '../components/PaymentTab'
 import { SavingsTab } from '../components/SavingsTab'
 import { DEBT_COLORS, PAYMENT_COLORS, SAVINGS_COLORS } from '../utils/formatters'
 import { AppShell } from './AppShell'
+import { BackupMenu } from '../components/BackupMenu'
 
 const SAMPLE_DEBTS: Debt[] = [
   {
@@ -111,7 +112,12 @@ export function DemoApp() {
       debts={debts}
       payments={payments}
       goals={goals}
-      headerExtra={<DemoBadge onLogin={() => navigate('/')} />}
+      headerExtra={
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <BackupMenu debts={debts} payments={payments} goals={goals} onDebtsChange={setDebts} onPaymentsChange={setPayments} onGoalsChange={setGoals} />
+          <DemoBadge onLogin={() => navigate('/')} />
+        </div>
+      }
     >
       {tab === 'debts' && <DebtTab debts={debts} onDebtsChange={setDebts} />}
       {tab === 'payments' && <PaymentTab payments={payments} onPaymentsChange={setPayments} balance={balance} reserve={reserve} onBalanceChange={setBalance} onReserveChange={setReserve} />}
