@@ -113,8 +113,10 @@ export function SavingsCard({ goal, onUpdate, onArchive, onDelete, index }: Savi
                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--border)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
-                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-                    <path d="M2 6h12l-1 8H3L2 6zM1 3h14M6 3V1h4v2" />
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M2 6.5h12v8H2z" />
+                    <path d="M1 3.5h14v3H1z" />
+                    <path d="M8 9.5v3M6.5 11l1.5 1.5L9.5 11" />
                   </svg>
                   Archivovat
                 </button>
