@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import type { SavingsGoal, SavingsDeposit } from '../types'
+import { GaugeChart } from './GaugeChart'
 import { formatCurrency, formatDate, generateId } from '../utils/formatters'
 
 interface SavingsCardProps {
@@ -13,16 +14,10 @@ interface SavingsCardProps {
 export function SavingsCard({ goal, onUpdate, onArchive, onDelete, index }: SavingsCardProps) {
   const [showDeposit, setShowDeposit] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
-  const [displayPct, setDisplayPct] = useState(0)
 
   const pct = goal.targetAmount > 0 ? Math.min(goal.savedAmount / goal.targetAmount, 1) : 0
   const remaining = Math.max(goal.targetAmount - goal.savedAmount, 0)
   const isComplete = goal.savedAmount >= goal.targetAmount
-
-  useEffect(() => {
-    const t = setTimeout(() => setDisplayPct(pct), 80 + index * 100)
-    return () => clearTimeout(t)
-  }, [pct, index])
 
   const avgMonthly = calcAvgMonthly(goal.deposits)
   const monthsLeft = avgMonthly && avgMonthly > 0 && remaining > 0
@@ -35,14 +30,14 @@ export function SavingsCard({ goal, onUpdate, onArchive, onDelete, index }: Savi
         className="animate-fade-up"
         style={{
           animationDelay: `${index * 80}ms`,
-          position: 'relative',
-          overflow: 'hidden',
           background: 'var(--card)',
           border: isComplete
             ? `1px solid ${goal.color}50`
             : '1px solid var(--border)',
           borderRadius: 'var(--radius-lg)',
-          padding: '24px',
+          padding: '22px 22px 20px',
+          position: 'relative',
+          overflow: 'hidden',
           transition: 'border-color 0.3s',
           display: 'flex',
           flexDirection: 'column',
@@ -55,199 +50,170 @@ export function SavingsCard({ goal, onUpdate, onArchive, onDelete, index }: Savi
           if (!isComplete) (e.currentTarget as HTMLElement).style.borderColor = 'var(--border)'
         }}
       >
-        {/* Gradient fill from bottom — animates on mount */}
+        {/* Subtle ambient glow behind gauge area */}
         <div style={{
           position: 'absolute',
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: `${displayPct * 100}%`,
-          background: isComplete
-            ? `linear-gradient(to top, ${goal.color}28 0%, ${goal.color}14 60%, transparent 100%)`
-            : `linear-gradient(to top, ${goal.color}20 0%, ${goal.color}0C 70%, transparent 100%)`,
-          borderTop: isComplete ? 'none' : `1px dashed ${goal.color}40`,
-          transition: 'height 1.3s cubic-bezier(0.16, 1, 0.3, 1)',
+          bottom: -40,
+          left: '50%',
+          transform: 'translateX(-50%)',
+          width: 200,
+          height: 200,
+          borderRadius: '50%',
+          background: `radial-gradient(circle, ${goal.color}12 0%, transparent 70%)`,
           pointerEvents: 'none',
-          zIndex: 0,
         }} />
 
-        {/* All content above the fill */}
-        <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', gap: 0 }}>
-
-          {/* Header */}
-          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 26, lineHeight: 1 }}>{goal.emoji}</span>
-              <div>
-                <h3 style={{
-                  fontFamily: 'var(--font-display)',
-                  fontSize: 16,
-                  fontWeight: 700,
-                  color: 'var(--text-primary)',
-                  letterSpacing: '-0.02em',
-                  marginBottom: 2,
-                }}>
-                  {goal.name}
-                </h3>
-                {goal.description && (
-                  <p style={{ fontSize: 11, color: 'var(--text-secondary)', opacity: 0.7 }}>{goal.description}</p>
-                )}
-              </div>
-            </div>
-
-            {/* Menu */}
-            <div style={{ position: 'relative', flexShrink: 0 }}>
-              <button
-                onClick={() => setShowMenu(m => !m)}
-                className="btn-ghost"
-                style={{ padding: '4px 8px', borderRadius: 6 }}
-              >
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                  <circle cx="8" cy="3" r="1.5" /><circle cx="8" cy="8" r="1.5" /><circle cx="8" cy="13" r="1.5" />
-                </svg>
-              </button>
-              {showMenu && (
-                <div style={{
-                  position: 'absolute', top: '100%', right: 0, marginTop: 4,
-                  background: 'var(--bg-2)', border: '1px solid var(--border-active)',
-                  borderRadius: 'var(--radius-sm)', overflow: 'hidden', zIndex: 20,
-                  minWidth: 160, boxShadow: 'var(--shadow-card)',
-                }}>
-                  <button
-                    onClick={() => { setShowMenu(false); onArchive(goal.id) }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', color: 'var(--text-secondary)', fontSize: 13, transition: 'background 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'var(--border)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 6h12l-1 8H3L2 6zM1 3h14M6 3V1h4v2" /></svg>
-                    Archivovat
-                  </button>
-                  <button
-                    onClick={() => { setShowMenu(false); onDelete(goal.id) }}
-                    style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', color: 'var(--red)', fontSize: 13, transition: 'background 0.15s' }}
-                    onMouseEnter={e => (e.currentTarget.style.background = 'rgba(248,113,113,0.08)')}
-                    onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
-                  >
-                    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5M3 4l1 10h8l1-10" /></svg>
-                    Smazat
-                  </button>
-                </div>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 16, position: 'relative', zIndex: 1 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 24, lineHeight: 1, flexShrink: 0 }}>{goal.emoji}</span>
+            <div>
+              <h3 style={{
+                fontFamily: 'var(--font-display)',
+                fontSize: 15,
+                fontWeight: 700,
+                color: 'var(--text-primary)',
+                letterSpacing: '-0.02em',
+                marginBottom: 2,
+                lineHeight: 1.2,
+              }}>
+                {goal.name}
+              </h3>
+              {goal.description && (
+                <p style={{ fontSize: 11, color: 'var(--text-secondary)', opacity: 0.7 }}>
+                  {goal.description}
+                </p>
               )}
             </div>
           </div>
 
-          {/* Main numbers */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 8 }}>
-            <div>
-              <p style={{ fontSize: 11, color: 'var(--text-tertiary)', textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 500, marginBottom: 4 }}>
-                Naspořeno
-              </p>
-              <p style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 24,
-                fontWeight: 500,
-                color: isComplete ? goal.color : 'var(--text-primary)',
-                letterSpacing: '-0.03em',
-                lineHeight: 1,
+          {/* Menu */}
+          <div style={{ position: 'relative', flexShrink: 0 }}>
+            <button
+              onClick={() => setShowMenu(m => !m)}
+              className="btn-ghost"
+              style={{ padding: '4px 8px', borderRadius: 6 }}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                <circle cx="8" cy="3" r="1.5" />
+                <circle cx="8" cy="8" r="1.5" />
+                <circle cx="8" cy="13" r="1.5" />
+              </svg>
+            </button>
+            {showMenu && (
+              <div style={{
+                position: 'absolute', top: '100%', right: 0, marginTop: 4,
+                background: 'var(--bg-2)', border: '1px solid var(--border-active)',
+                borderRadius: 'var(--radius-sm)', overflow: 'hidden',
+                zIndex: 20, minWidth: 160, boxShadow: 'var(--shadow-card)',
               }}>
-                {formatCurrency(goal.savedAmount)}
-              </p>
-            </div>
-            <div style={{
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'flex-end',
-              gap: 2,
-            }}>
-              <span style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 28,
-                fontWeight: 600,
-                color: goal.color,
-                letterSpacing: '-0.04em',
-                lineHeight: 1,
-                filter: isComplete ? `drop-shadow(0 0 8px ${goal.color}80)` : 'none',
-                transition: 'filter 0.5s',
-              }}>
-                {Math.round(pct * 100)}%
-              </span>
-              <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>z {formatCurrency(goal.targetAmount)}</span>
-            </div>
-          </div>
-
-          {/* Prediction / remaining */}
-          <div style={{ marginBottom: 16, minHeight: 18 }}>
-            {isComplete ? (
-              <p style={{ fontSize: 12, color: goal.color, fontWeight: 500 }}>Cíl dosažen!</p>
-            ) : (
-              <p style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                Zbývá <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)' }}>{formatCurrency(remaining)}</span>
-                {monthsLeft !== null && (
-                  <> · za{' '}
-                    <span style={{ color: goal.color }}>
-                      {monthsLeft === 1 ? '1 měsíc' : monthsLeft < 5 ? `${monthsLeft} měsíce` : `${monthsLeft} měsíců`}
-                    </span>
-                    {' '}při avg {formatCurrency(Math.round(avgMonthly!))}/m
-                  </>
-                )}
-              </p>
+                <button
+                  onClick={() => { setShowMenu(false); onArchive(goal.id) }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', color: 'var(--text-secondary)', fontSize: 13, transition: 'background 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--border)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                    <path d="M2 6h12l-1 8H3L2 6zM1 3h14M6 3V1h4v2" />
+                  </svg>
+                  Archivovat
+                </button>
+                <button
+                  onClick={() => { setShowMenu(false); onDelete(goal.id) }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', color: 'var(--red)', fontSize: 13, transition: 'background 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'rgba(248,113,113,0.08)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                    <path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5M3 4l1 10h8l1-10" />
+                  </svg>
+                  Smazat
+                </button>
+              </div>
             )}
           </div>
+        </div>
 
-          {/* Recent deposits */}
-          {goal.deposits.length > 0 && (
-            <div style={{ marginBottom: 16, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
-              <p style={{ fontSize: 11, color: 'var(--text-tertiary)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.07em', fontWeight: 500 }}>
-                Poslední vklady
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {[...goal.deposits].reverse().slice(0, 3).map(d => (
-                  <div key={d.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-                      {formatDate(d.date)}{d.note ? ` · ${d.note}` : ''}
-                    </span>
-                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: goal.color }}>
-                      +{formatCurrency(d.amount)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
+        {/* Gauge */}
+        <div style={{ position: 'relative', zIndex: 1, padding: '0 4px', marginBottom: 12 }}>
+          <GaugeChart
+            pct={pct}
+            color={goal.color}
+            savedAmount={goal.savedAmount}
+            targetAmount={goal.targetAmount}
+            uid={goal.id}
+            delayMs={80 + index * 100}
+          />
+        </div>
+
+        {/* Prediction / completion */}
+        <div style={{ position: 'relative', zIndex: 1, marginBottom: 14, minHeight: 16 }}>
+          {isComplete ? (
+            <p style={{
+              fontSize: 12, color: goal.color, fontWeight: 600,
+              fontFamily: 'var(--font-display)', textAlign: 'center',
+            }}>
+              🎉 Cíl splněn!
+            </p>
+          ) : monthsLeft !== null ? (
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', textAlign: 'center' }}>
+              Za{' '}
+              <span style={{ color: goal.color, fontWeight: 500 }}>
+                {monthsLeft === 1 ? '1 měsíc' : monthsLeft < 5 ? `${monthsLeft} měsíce` : `${monthsLeft} měsíců`}
+              </span>
+              {' '}· avg{' '}
+              <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-primary)', fontSize: 11 }}>
+                {formatCurrency(Math.round(avgMonthly!))}
+              </span>
+              /m
+            </p>
+          ) : (
+            <p style={{ fontSize: 12, color: 'var(--text-secondary)', textAlign: 'center', opacity: 0.6 }}>
+              Přidej vklad pro výpočet predikce
+            </p>
           )}
+        </div>
 
-          {/* Action */}
+        {/* Last deposit hint */}
+        {goal.deposits.length > 0 && !isComplete && (
+          <div style={{
+            position: 'relative', zIndex: 1,
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            marginBottom: 14, paddingTop: 12,
+            borderTop: '1px solid var(--border)',
+          }}>
+            <span style={{ fontSize: 11, color: 'var(--text-tertiary)' }}>
+              Poslední vklad · {formatDate([...goal.deposits].sort((a, b) => b.date.localeCompare(a.date))[0].date)}
+            </span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: goal.color }}>
+              +{formatCurrency([...goal.deposits].sort((a, b) => b.date.localeCompare(a.date))[0].amount)}
+            </span>
+          </div>
+        )}
+
+        {/* Action button */}
+        <div style={{ position: 'relative', zIndex: 1 }}>
           {isComplete ? (
             <div style={{
-              padding: '10px',
-              borderRadius: 'var(--radius-sm)',
-              background: `${goal.color}15`,
-              border: `1px solid ${goal.color}30`,
-              textAlign: 'center',
-              fontSize: 13,
-              color: goal.color,
-              fontFamily: 'var(--font-display)',
-              fontWeight: 600,
+              padding: '10px', borderRadius: 'var(--radius-sm)',
+              background: `${goal.color}15`, border: `1px solid ${goal.color}30`,
+              textAlign: 'center', fontSize: 13, color: goal.color,
+              fontFamily: 'var(--font-display)', fontWeight: 600,
             }}>
-              🎉 Splněno!
+              Splněno
             </div>
           ) : (
             <button
               onClick={() => setShowDeposit(true)}
               style={{
-                width: '100%',
-                padding: '10px',
+                width: '100%', padding: '10px',
                 border: `1px solid ${goal.color}33`,
                 borderRadius: 'var(--radius-sm)',
-                color: goal.color,
-                fontSize: 13,
-                fontFamily: 'var(--font-display)',
-                fontWeight: 600,
+                color: goal.color, fontSize: 13,
+                fontFamily: 'var(--font-display)', fontWeight: 600,
                 background: `${goal.color}0A`,
                 transition: 'background 0.2s, border-color 0.2s',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 6,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}
               onMouseEnter={e => {
                 (e.currentTarget as HTMLElement).style.background = `${goal.color}18`
@@ -309,53 +275,25 @@ function DepositModal({
           </p>
           <h2 style={{ fontSize: 22, letterSpacing: '-0.03em' }}>Přidat vklad</h2>
         </div>
-
         <form
           onSubmit={e => { e.preventDefault(); if (amountNum > 0) onSave(amountNum, date, note.trim()) }}
           style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
         >
           <div>
             <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Částka (Kč)</label>
-            <input
-              className="input-base"
-              type="text"
-              inputMode="decimal"
-              placeholder="0"
-              value={amount}
-              onChange={e => setAmount(e.target.value)}
-              autoFocus
-            />
+            <input className="input-base" type="text" inputMode="decimal" placeholder="0" value={amount} onChange={e => setAmount(e.target.value)} autoFocus />
           </div>
           <div>
             <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Datum</label>
-            <input
-              className="input-base"
-              type="date"
-              value={date}
-              onChange={e => setDate(e.target.value)}
-            />
+            <input className="input-base" type="date" value={date} onChange={e => setDate(e.target.value)} />
           </div>
           <div>
             <label style={{ fontSize: 12, color: 'var(--text-secondary)', display: 'block', marginBottom: 6 }}>Poznámka (volitelné)</label>
-            <input
-              className="input-base"
-              type="text"
-              placeholder="Např. Výplata"
-              value={note}
-              onChange={e => setNote(e.target.value)}
-            />
+            <input className="input-base" type="text" placeholder="Např. Výplata" value={note} onChange={e => setNote(e.target.value)} />
           </div>
-
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
-            <button type="button" onClick={onClose} className="btn-ghost" style={{ flex: 1, justifyContent: 'center' }}>
-              Zrušit
-            </button>
-            <button
-              type="submit"
-              className="btn-primary"
-              style={{ flex: 2, justifyContent: 'center', opacity: amountNum <= 0 ? 0.5 : 1 }}
-              disabled={amountNum <= 0}
-            >
+            <button type="button" onClick={onClose} className="btn-ghost" style={{ flex: 1, justifyContent: 'center' }}>Zrušit</button>
+            <button type="submit" className="btn-primary" style={{ flex: 2, justifyContent: 'center', opacity: amountNum <= 0 ? 0.5 : 1 }} disabled={amountNum <= 0}>
               Uložit vklad
             </button>
           </div>
@@ -368,14 +306,8 @@ function DepositModal({
 function calcAvgMonthly(deposits: SavingsDeposit[]): number | null {
   if (deposits.length === 0) return null
   if (deposits.length === 1) return deposits[0].amount
-
   const sorted = [...deposits].sort((a, b) => a.date.localeCompare(b.date))
-  const first = new Date(sorted[0].date).getTime()
-  const last = new Date(sorted[sorted.length - 1].date).getTime()
-  const months = (last - first) / (1000 * 60 * 60 * 24 * 30.44)
-
+  const months = (new Date(sorted[sorted.length - 1].date).getTime() - new Date(sorted[0].date).getTime()) / (1000 * 60 * 60 * 24 * 30.44)
   if (months < 0.5) return null
-
-  const total = deposits.reduce((s, d) => s + d.amount, 0)
-  return total / months
+  return deposits.reduce((s, d) => s + d.amount, 0) / months
 }
