@@ -2,6 +2,7 @@ import { useState } from 'react'
 import type { SavingsGoal, SavingsDeposit } from '../types'
 import { GaugeChart } from './GaugeChart'
 import { formatCurrency, formatDate, generateId } from '../utils/formatters'
+import { AddSavingsGoalModal } from './AddSavingsGoalModal'
 
 interface SavingsCardProps {
   goal: SavingsGoal
@@ -13,6 +14,7 @@ interface SavingsCardProps {
 
 export function SavingsCard({ goal, onUpdate, onArchive, onDelete, index }: SavingsCardProps) {
   const [showDeposit, setShowDeposit] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
 
   const pct = goal.targetAmount > 0 ? Math.min(goal.savedAmount / goal.targetAmount, 1) : 0
@@ -107,15 +109,22 @@ export function SavingsCard({ goal, onUpdate, onArchive, onDelete, index }: Savi
                 zIndex: 20, minWidth: 160, boxShadow: 'var(--shadow-card)',
               }}>
                 <button
+                  onClick={() => { setShowMenu(false); setShowEdit(true) }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', color: 'var(--text-secondary)', fontSize: 13, transition: 'background 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--border)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M11 2l3 3-8 8H3v-3l8-8z" /></svg>
+                  Upravit
+                </button>
+                <button
                   onClick={() => { setShowMenu(false); onArchive(goal.id) }}
                   style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', color: 'var(--text-secondary)', fontSize: 13, transition: 'background 0.15s' }}
                   onMouseEnter={e => (e.currentTarget.style.background = 'var(--border)')}
                   onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                 >
                   <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M2 6.5h12v8H2z" />
-                    <path d="M1 3.5h14v3H1z" />
-                    <path d="M8 9.5v3M6.5 11l1.5 1.5L9.5 11" />
+                    <path d="M2 6.5h12v8H2z" /><path d="M1 3.5h14v3H1z" /><path d="M8 9.5v3M6.5 11l1.5 1.5L9.5 11" />
                   </svg>
                   Archivovat
                 </button>
@@ -247,6 +256,13 @@ export function SavingsCard({ goal, onUpdate, onArchive, onDelete, index }: Savi
             })
             setShowDeposit(false)
           }}
+        />
+      )}
+      {showEdit && (
+        <AddSavingsGoalModal
+          goal={goal}
+          onClose={() => setShowEdit(false)}
+          onSave={updated => { onUpdate(updated); setShowEdit(false) }}
         />
       )}
     </>

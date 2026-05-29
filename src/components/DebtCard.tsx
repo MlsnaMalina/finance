@@ -3,6 +3,7 @@ import type { Debt } from '../types'
 import { DonutChart } from './DonutChart'
 import { formatCurrency, formatDate } from '../utils/formatters'
 import { AddPaymentModal } from './AddPaymentModal'
+import { AddDebtModal } from './AddDebtModal'
 
 interface DebtCardProps {
   debt: Debt
@@ -14,6 +15,7 @@ interface DebtCardProps {
 
 export function DebtCard({ debt, onUpdate, onArchive, onDelete, index }: DebtCardProps) {
   const [showPayment, setShowPayment] = useState(false)
+  const [showEdit, setShowEdit] = useState(false)
   const [showMenu, setShowMenu] = useState(false)
   const pct = debt.totalAmount > 0 ? Math.min(debt.paidAmount / debt.totalAmount, 1) : 0
   const remaining = Math.max(debt.totalAmount - debt.paidAmount, 0)
@@ -102,6 +104,15 @@ export function DebtCard({ debt, onUpdate, onArchive, onDelete, index }: DebtCar
                   boxShadow: 'var(--shadow-card)',
                 }}
               >
+                <button
+                  onClick={() => { setShowMenu(false); setShowEdit(true) }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', padding: '10px 14px', color: 'var(--text-secondary)', fontSize: 13, transition: 'background 0.15s' }}
+                  onMouseEnter={e => (e.currentTarget.style.background = 'var(--border)')}
+                  onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+                >
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"><path d="M11 2l3 3-8 8H3v-3l8-8z" /></svg>
+                  Upravit
+                </button>
                 {!isComplete && (
                   <button
                     onClick={() => { setShowMenu(false); onArchive(debt.id) }}
@@ -110,9 +121,7 @@ export function DebtCard({ debt, onUpdate, onArchive, onDelete, index }: DebtCar
                     onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
                   >
                     <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                      <path d="M2 6.5h12v8H2z" />
-                      <path d="M1 3.5h14v3H1z" />
-                      <path d="M8 9.5v3M6.5 11l1.5 1.5L9.5 11" />
+                      <path d="M2 6.5h12v8H2z" /><path d="M1 3.5h14v3H1z" /><path d="M8 9.5v3M6.5 11l1.5 1.5L9.5 11" />
                     </svg>
                     Archivovat
                   </button>
@@ -246,6 +255,13 @@ export function DebtCard({ debt, onUpdate, onArchive, onDelete, index }: DebtCar
             onUpdate({ ...debt, paidAmount: debt.paidAmount + amount, payments: [...debt.payments, payment] })
             setShowPayment(false)
           }}
+        />
+      )}
+      {showEdit && (
+        <AddDebtModal
+          debt={debt}
+          onClose={() => setShowEdit(false)}
+          onSave={updated => { onUpdate(updated); setShowEdit(false) }}
         />
       )}
     </>
