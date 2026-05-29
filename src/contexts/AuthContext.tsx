@@ -36,7 +36,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   async function signUp(email: string, password: string) {
-    const { error } = await supabase.auth.signUp({ email, password })
+    const { data, error } = await supabase.auth.signUp({ email, password })
+    // If user already exists Supabase returns a fake success — detect it
+    if (!error && data.user && !data.user.identities?.length) {
+      return { error: 'Tento email je již zaregistrován. Přihlaš se místo toho.' }
+    }
     return { error: error?.message ?? null }
   }
 

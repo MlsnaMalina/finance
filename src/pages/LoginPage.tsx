@@ -30,7 +30,7 @@ export function LoginPage() {
       const { error } = await signUp(email, password)
       setLoading(false)
       if (error) {
-        setError('Registrace se nezdařila. Zkuste to znovu.')
+        setError(error)
       } else {
         setSuccess('Účet vytvořen! Zkontroluj email pro potvrzení, pak se přihlaš.')
         setMode('login')
