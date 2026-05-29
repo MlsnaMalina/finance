@@ -57,33 +57,12 @@ export function AppShell({ tab, onTabChange, debts, payments, goals, headerExtra
           {/* Center: tab switcher */}
           <nav style={{ display: 'flex', gap: 2, background: 'var(--card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', padding: 3 }}>
             <TabButton active={tab === 'debts'} onClick={() => onTabChange('debts')} badge={activeDebts.length > 0 ? activeDebts.length : undefined}>
-              {/* Anchor — weight of financial obligation */}
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="8" cy="4" r="2" />
-                <path d="M5.5 6h5" />
-                <path d="M8 6v8" />
-                <path d="M4.5 12a4 4 0 0 0 7 0" />
-              </svg>
               Dluhy
             </TabButton>
             <TabButton active={tab === 'payments'} onClick={() => onTabChange('payments')} badge={payments.filter(p => p.active).length > 0 ? payments.filter(p => p.active).length : undefined}>
-              {/* Two rotating arrows — recurring cycle */}
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 3.5A6 6 0 0 1 14 8" />
-                <path d="M14 6v2h-2" />
-                <path d="M12 12.5A6 6 0 0 1 2 8" />
-                <path d="M2 10v-2h2" />
-              </svg>
               Platby
             </TabButton>
             <TabButton active={tab === 'savings'} onClick={() => onTabChange('savings')} badge={activeGoals.length > 0 ? activeGoals.length : undefined}>
-              {/* Rising bars — accumulation of savings */}
-              <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 13V9.5" />
-                <path d="M8 13V5.5" />
-                <path d="M13 13V2" />
-                <path d="M1.5 13h13" />
-              </svg>
               Spoření
             </TabButton>
           </nav>
