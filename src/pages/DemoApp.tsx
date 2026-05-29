@@ -98,9 +98,9 @@ const SAMPLE_GOALS: SavingsGoal[] = [
 export function DemoApp() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<TabId>('debts')
-  const [debts, setDebts] = useLocalStorage<Debt[]>('demo-finance-debts', SAMPLE_DEBTS)
-  const [payments, setPayments] = useLocalStorage<RecurringPayment[]>('demo-finance-payments', SAMPLE_PAYMENTS)
-  const [goals, setGoals] = useLocalStorage<SavingsGoal[]>('demo-finance-goals', SAMPLE_GOALS)
+  const [debts, setDebts] = useLocalStorage<Debt[]>('demo-finance-debts-v2', SAMPLE_DEBTS)
+  const [payments, setPayments] = useLocalStorage<RecurringPayment[]>('demo-finance-payments-v2', SAMPLE_PAYMENTS)
+  const [goals, setGoals] = useLocalStorage<SavingsGoal[]>('demo-finance-goals-v2', SAMPLE_GOALS)
 
   return (
     <AppShell
